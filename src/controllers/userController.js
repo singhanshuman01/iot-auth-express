@@ -5,7 +5,7 @@ const nodemcuIP = process.argv[2];
 const startCharging = async function(req,res){
     try {
         console.log(`Going to ${nodemcuIP}`);
-        const l = await axios.get(`http://${nodemcuIP}/relay-on`);
+        const l = await axios.get(`http://${nodemcuIP}/relay_on`);
         console.log(l);
         res.redirect('/success');
     } catch (err) {
@@ -15,7 +15,7 @@ const startCharging = async function(req,res){
 
 const stopCharging = async function(req,res){
     try {
-        const l = await axios.get(`http://${nodemcuIP}/relay-off`);
+        const l = await axios.get(`http://${nodemcuIP}/relay_off`);
         console.log(l);
         res.redirect('/success');
     } catch (err) {
