@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+const nodemcuIP = process.argv[2];
+
 const startCharging = async function(req,res){
     try {
+        console.log(`Going to ${nodemcuIP}`);
         const l = await axios.get(`http://${nodemcuIP}/relay-on`);
         console.log(l);
         res.redirect('/success');

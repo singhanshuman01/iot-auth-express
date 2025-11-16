@@ -6,9 +6,12 @@ import morgan from 'morgan';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+
+import rateLimiter from './middlewares/rateLimiter.js';
 const app = express();
 
 app.set('view engine', 'ejs');
+app.use(rateLimiter);
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('public'));
@@ -17,7 +20,7 @@ app.use(cookieParser());
 
 app.use('/', authRoutes);
 app.use('/', userRoutes);
-app.use('/admin', adminRoutes);
+app.use('/', adminRoutes);
 
 app.get('/health', (req,res)=>{
     res.json({health: "OK"});
