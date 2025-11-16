@@ -1,26 +1,17 @@
 import userModel from "../models/userModel.js";
-import jwt from 'jsonwebtoken';
-
-async function handleSignup(req,res){
-    const {username, password} = req.body;
-
-    try {
-        const userExists = await userModel.getUser(username);
-        if(userExists){
-            return res.render('login', {message: "User already exists"});
-        }
-        await userModel.createUser(username,password);
-        res.render('login', {message: "Signup successful, login!"});
-    } catch (err) {
-        console.error(err);
-    }
-}
+import jwt from "../utils/jwt.js";
 
 async function handleLogin(req,res){
     const {username, password} = req.body;
     try {
         const checkUser = await userModel.verifyUser(username, password);
         if(checkUser){
+            const token = jwt.createToken({uid: checkUser});
+            res.cookie('token', token, {
+                httpOnly: true,
+                sameSite: "strict",
+                expiresIn: '7d',
+            });
             res.redirect('/success');
         }else{
             res.redirect('/login');
@@ -30,4 +21,4 @@ async function handleLogin(req,res){
     }
 }
 
-export default {handleLogin, handleSignup};
+export default {handleLogin};
