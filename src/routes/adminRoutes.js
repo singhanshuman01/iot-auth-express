@@ -1,8 +1,19 @@
 import express from 'express';
+import expressSession from 'express-session';
 import adminController from '../controllers/adminController.js';
-import jwt from '../utils/jwt.js';
 
 const router = express.Router();
+router.use(expressSession({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        sameSite: true,
+        maxAge: 1000*60*15,
+        httpOnly: true,
+
+    }
+}));
 
 router.get('/admin', (req, res) => {
     res.render('admin');
@@ -10,16 +21,15 @@ router.get('/admin', (req, res) => {
 
 router.get('/admin-dashboard', (req, res) => {
     try {
-        const token = req.cookies?.token;
-        if (!token) return res.redirect('/admin');
-        const verified = jwt.verifyToken(token);
-        if (!verified) return res.redirect('/admin');
-        res.clearCookie('token');
+        const admin = req.session?.admin || null;
+        if(!admin) return res.redirect('/admin');
         res.render('status');
     } catch (e) {
         console.error(e);
         res.redirect('/admin');
     }
-})
+});
+
+router.post('/create-user', adminController.createUser);
 
 export default router;

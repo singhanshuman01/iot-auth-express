@@ -1,18 +1,15 @@
-import adminModel from '../models/adminModel.js';
-import jwt from '../utils/jwt.js';
 
-async function handleLogin(req,res, next){
-    const {admin_name, admin_password} = req.body;
+import adminModel from '../models/adminModel.js';
+import userModel from '../models/userModel.js';
+
+async function handleLogin(req, res) {
+    const { admin_name, admin_password } = req.body;
     try {
-        const status = await adminModel.verifyAdmin(admin_name, admin_password);
-        if(status){
-            const token = jwt.createToken({admin_name});
-            res.cookie('token', token, {
-                httpOnly: true,
-                sameSite: 'strict'
-            })
+        const adminVerified = await adminModel.verifyAdmin(admin_name, admin_password);
+        if (adminVerified) {
+            req.session.admin = admin_name;
             res.redirect('/admin-dashboard');
-        }else{
+        } else {
             res.redirect('/admin');
         }
     } catch (e) {
@@ -20,4 +17,18 @@ async function handleLogin(req,res, next){
     }
 }
 
-export default {handleLogin};
+async function createUser(req, res) {
+    const { username, password } = req.body;
+    try {
+        const userExists = await userModel.getUser(username);
+        if(userExists) return res.redirect('/admin-dashboard');
+        const result = await userModel.createUser(username, password);
+        if (!result) return res.status(500).send("Internal server error");
+        res.redirect('/admin-dashboard');
+    } catch (e) {
+        console.error(e);
+        res.status(500).send("Internal server Error");
+    }
+}
+
+export default { handleLogin, createUser };

@@ -36,4 +36,16 @@ const verifyToken = function (token) {
 
 }
 
-export default { createToken, verifyToken };
+async function decode(token){
+    try{
+        if(!token){
+            throw new Error('No token to decode');
+        }
+        return jwt.decode(token);
+    } catch(e){
+        console.error(e);
+        return null;
+    }
+}
+
+export default { createToken, verifyToken, decode };

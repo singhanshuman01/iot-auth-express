@@ -7,7 +7,6 @@ const router = express.Router();
 router.get('/', (req,res)=>res.redirect('/success'));
 
 router.get('/success', tokenCheck, (req,res)=>{
-    console.log(req.user);
     res.render('success');
 });
 

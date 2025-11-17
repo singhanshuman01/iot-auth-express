@@ -8,4 +8,9 @@ router.get('/login', (req,res)=>{
 })
 .post('/login', authController.handleLogin);
 
+router.post('/logout', (req,res)=>{
+    res.clearCookie('token');
+    res.redirect('/login');
+});
+
 export default router;
