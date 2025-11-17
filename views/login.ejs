@@ -4,10 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/auth.css">
+    <style>
+        h3{
+            background-color: hsla(0, 0%, 0%, 0.78);
+            color: whitesmoke;
+            border: 3px solid #0000;
+            border-radius: 15px;
+            box-shadow: 10px 10px 10px 0.1px black;
+            padding: 20px;
+            text-align: center;
+            width: 600px;
+            height: 100px;
+            font-size: 3rem;
+            margin: 20px;
+        }
+    </style>
     <title>Login</title>
 </head>
 <body>
+    <% if (locals.message) { %>
+         <h3><%= message %></h3>
+        <% } %>
     <div class="box">
+        
         <form action="/login" method="post">
             <label for="uname">Username</label>
             <input type="text" name="username" id="uname">

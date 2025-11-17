@@ -5,8 +5,7 @@ const router = express.Router();
 
 router.get('/login', (req,res)=>{
     res.render('login');
-})
-.post('/login', authController.handleLogin);
+}).post('/login', authController.handleLogin);
 
 router.post('/logout', (req,res)=>{
     res.clearCookie('token');

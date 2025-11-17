@@ -37,18 +37,34 @@
                     <th>Bill</th>
                 </thead>
                 <tbody>
+                    <% for(let i = 0; i < logs.length; i++) { %>
                     <tr>
-                        <td>1</td>
-                        <td>testuser</td>
-                        <td>10min</td>
-                        <td>10:00:00 am</td>
-                        <td>0.00</td>
+                        <td><%= i+1 %></td>
+                        <td><%= logs[i].username %></td>
+                        <td><%= logs[i].time_period %> </td>
+                        <td><%= logs[i].time_stamp %> </td>
+                        <td><%= logs[i].time_period*5 %></td>
                     </tr>
+                    <% } %>
+                    
                 </tbody>
             </table>
         </div>
-    </div>
 
+
+        
+    </div>
+    <form action="/admin-logout" method="post">
+
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+    <script>
+        async function logout(){
+            await fetch('/admin-logout', {
+                method: 'post'
+            });
+        }
+    </script>
 </body>
 
 </html>

@@ -12,14 +12,14 @@
     <div class="box">
         <form action="/start-charging" method="post" id="start-charging-form">
 
-            <input type="radio" name="time" id="time">
-            <label for="time">5min</label>
+            <input type="radio" name="time" id="time-5">
+            <label for="time-5">5min</label>
 
-            <input type="radio" name="time" id="time">
-            <label for="time">10min</label>
+            <input type="radio" name="time" id="time-10">
+            <label for="time-10">10min</label>
 
-            <input type="radio" name="time" id="">
-            <label for="">15min</label> <br>
+            <input type="radio" name="time" id="time-15">
+            <label for="time-15">15min</label> <br>
 
             <label for="btn">Start Charging</label>
             <input type="submit" value="⚡">
@@ -48,7 +48,7 @@
     </div>
 
     <form action="/logout" method="post">
-        <button type="submit">Logout</button>
+        <button type="submit" class="logout-btn">Logout</button>
     </form>
 
     <script>

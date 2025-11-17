@@ -5,7 +5,9 @@ async function handleLogin(req,res){
     const {username, password} = req.body;
     try {
         const checkUser = await userModel.verifyUser(username, password);
-        if(checkUser){
+        if(checkUser==-1){
+            return res.send('<h2>User doesn\'t exist, contact administrator</h2>');
+        }else if(checkUser > 0){
             const token = jwt.createToken({uid: checkUser});
             res.cookie('token', token, {
                 httpOnly: true,
@@ -14,7 +16,9 @@ async function handleLogin(req,res){
             });
             res.redirect('/success');
         }else{
-            res.redirect('/login');
+            res.render('login', {
+                message: "Wrong credentials"
+            });
         }
     } catch (err) {
         console.error(err);

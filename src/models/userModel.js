@@ -30,9 +30,9 @@ async function verifyUser(username, password) {
         if (user) {
             const verified = await bcrypt.compare(password, user.password);
             if (verified) return user.id;
-            else return false;
+            else return 0;
         }else{
-            return false;
+            return -1;
         }
     } catch (err) {
         console.error(err);
