@@ -35,14 +35,16 @@
             <thead>
                 <th>Sr.no.</th>
                 <th>Date</th>
-                <th>Bill</th>
+                <th>Time Period</th>
             </thead>
             <tbody>
+                <% for( let i = 0; i < logs.length; i++ ) { %>
                 <tr>
-                    <td>1</td>
-                    <td>sample</td>
-                    <td>0.00</td>
+                    <td><%= i+1 %></td>
+                    <td><%= logs[0].time_stamp %></td>
+                    <td><%= logs[0].time_period %> min</td>
                 </tr>
+                <% } %>
             </tbody>
         </table>
     </div>

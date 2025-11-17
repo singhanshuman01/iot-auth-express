@@ -1,4 +1,3 @@
-
 import adminModel from '../models/adminModel.js';
 import userModel from '../models/userModel.js';
 
@@ -22,7 +21,7 @@ async function createUser(req, res) {
     try {
         const userExists = await userModel.getUser(username);
         if(userExists) return res.redirect('/admin-dashboard');
-        const result = await userModel.createUser(username, password);
+        const result = await adminModel.createUser(username, password);
         if (!result) return res.status(500).send("Internal server error");
         res.redirect('/admin-dashboard');
     } catch (e) {

@@ -1,11 +1,13 @@
 import jwt from "../utils/jwt.js";
 
-const tokenCheck = function(req,res,next){
+const tokenCheck = async function(req,res,next){
     try {
         const token = req.cookies.token;
         if(!token) return res.redirect('/login');
         const b = jwt.verifyToken(token);
         if(!b) return res.redirect('/login');
+        const {uid} = await jwt.decode(token);
+        req.id = uid;
         return next()
     } catch (e) {
         console.error(e);

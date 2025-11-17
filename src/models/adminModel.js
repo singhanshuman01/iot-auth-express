@@ -13,6 +13,18 @@ async function verifyAdmin(admin_name, admin_password){
     }
 }
 
+async function createUser(username, password) {
+    try {
+        const hashedPass = bcrypt.hashSync(password, 10);
+        const result = await db.query("insert into users(username, password) values($1,$2)", [username, hashedPass]);
+        console.log(`user created`);
+        return result;
+    } catch (err) {
+        console.error(err);
+        return null;
+    }
+}
+
 async function getLogs() {
     try {
         const logs = await db.query("select * from logs");
@@ -22,4 +34,4 @@ async function getLogs() {
     }
 }
 
-export default {verifyAdmin, getLogs};
+export default {verifyAdmin, getLogs, createUser};

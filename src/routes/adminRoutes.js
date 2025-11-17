@@ -12,7 +12,6 @@ router.use(expressSession({
         sameSite: true,
         maxAge: 1000*60*15,
         httpOnly: true,
-
     }
 }));
 

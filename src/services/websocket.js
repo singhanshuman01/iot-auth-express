@@ -25,7 +25,13 @@ io.on('connection', (socket)=>{
     console.log(`A user connected with socket_id: ${socket.id}`);
     ratemap[socket.uid] = 0;
 
-    // if(socket.uid)
+    if(socket.uid){
+        const userRoom = `user_${socket.uid}`;
+        socket.join(userRoom);
+        console.log(`User_id ${socket.uid}, ${socket.id} has joined ${userRoom}`);
+    }
+
+    
 
     socket.on('disconnect', ()=>{
         console.log(`Socket: ${socket.id} disconnected`);

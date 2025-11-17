@@ -11,15 +11,12 @@ async function getUser(username) {
     }
 }
 
-async function createUser(username, password) {
+async function getUserLogs(uid){
     try {
-        const hashedPass = bcrypt.hashSync(password, 10);
-        const result = await db.query("insert into users(username, password) values($1,$2)", [username, hashedPass]);
-        console.log(`user created`);
-        return result;
-    } catch (err) {
-        console.error(err);
-        return null;
+        const result = await db.query('select time_stamp, time_period from users u join logs l on u.username=l.username where u.id=$1', [uid]);
+        return result.rows;
+    } catch (e) {
+        console.error("Error retrieving user logs: ", e);
     }
 }
 
@@ -39,4 +36,4 @@ async function verifyUser(username, password) {
     }
 }
 
-export default { getUser, createUser, verifyUser };
+export default { getUser, getUserLogs, verifyUser };
