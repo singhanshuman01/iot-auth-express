@@ -51,3 +51,6 @@ You should flash the .ino script into esp8266 first and note the local ip addres
 ```
 node server.js <esp8266-ip-address>
 ```
+
+## Credits
+The code in 404 page (nopage.html, nopage.css and nopage.js) belongs to Ethan, you can find the original code here https://codepen.io/eroxburgh/pen/zYYyEPg
