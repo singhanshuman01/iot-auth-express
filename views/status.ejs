@@ -12,10 +12,22 @@
     <h1>Dashboard</h1>
     <div class="container">
         <div class="charging-status">
-            <p>User 1 is charging</p>
-            <form action="" method="post">
-                <button type="submit" style="color: red;">x</button>
-            </form>
+            <% for( let i=0; i < relayStatus.length; i++ ) { %>
+                <% if (relayStatus[i]) { %>
+                    <div>
+                        <p>Relay <%= i+1 %> is active</p>
+                    <form action="" method="post">
+                        <button type="submit" style="color: red;">x</button>
+                    </form>
+                    </div>
+                    
+                <% }else{ %>
+                    <div>
+
+                        <p>Relay <%= i+1 %> is inactive</p>
+                    </div>
+                    <% } %>
+            <% } %>
         </div>
         <form action="/create-user" method="post">
             <label for="username">Username</label>
@@ -37,33 +49,41 @@
                     <th>Bill</th>
                 </thead>
                 <tbody>
-                    <% for(let i = 0; i < logs.length; i++) { %>
-                    <tr>
-                        <td><%= i+1 %></td>
-                        <td><%= logs[i].username %></td>
-                        <td><%= logs[i].time_period %> </td>
-                        <td><%= logs[i].time_stamp %> </td>
-                        <td><%= logs[i].time_period*5 %></td>
-                    </tr>
-                    <% } %>
-                    
+                    <% for(let i=0; i < logs.length; i++) { %>
+                        <tr>
+                            <td>
+                                <%= i+1 %>
+                            </td>
+                            <td>
+                                <%= logs[i].username %>
+                            </td>
+                            <td>
+                                <%= logs[i].time_period %>
+                            </td>
+                            <td>
+                                <%= logs[i].time_stamp %>
+                            </td>
+                            <td>
+                                <%= logs[i].time_period*5 %>
+                            </td>
+                        </tr>
+                        <% } %>
+
                 </tbody>
             </table>
         </div>
 
 
-        
+
     </div>
     <form action="/admin-logout" method="post">
 
         <button type="submit" class="logout-btn">Logout</button>
     </form>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        async function logout(){
-            await fetch('/admin-logout', {
-                method: 'post'
-            });
-        }
+        const socket = io();
     </script>
 </body>
 

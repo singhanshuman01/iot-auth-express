@@ -39,7 +39,7 @@ const verifyToken = function (token) {
 async function decode(token){
     try{
         if(!token){
-            throw new Error('No token to decode');
+            return null;
         }
         return jwt.decode(token);
     } catch(e){

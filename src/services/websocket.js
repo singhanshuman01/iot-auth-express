@@ -11,7 +11,7 @@ const ratemap = {};
 
 io.use(async (socket,next)=>{
     try {
-        const {uid} = await jwt.decode(socket.handshake.headers.cookie.split('token=')[1].split(';')[0]);
+        const {uid} = await jwt.decode(socket.handshake.headers.cookie?.split('token=')[1]?.split(';')[0]);
         console.log(uid);
         if(!uid) return next(new Error("Missing token"));
         socket.uid = uid;

@@ -2,6 +2,7 @@ import express from 'express';
 import expressSession from 'express-session';
 import adminController from '../controllers/adminController.js';
 import adminModel from '../models/adminModel.js';
+import { getSession } from '../utils/chargingSessionInfo.js';
 
 const router = express.Router();
 router.use(expressSession({
@@ -24,7 +25,11 @@ router.get('/admin-dashboard', async (req, res) => {
         const admin = req.session?.admin || null;
         if(!admin) return res.redirect('/admin');
         const logs = await adminModel.getLogs();
-        res.render('status', {logs: logs});
+        const sess = getSession();
+        res.render('status', {
+            relayStatus: [sess[0], sess[1]],
+            logs: logs
+        });
     } catch (e) {
         console.error(e);
         res.redirect('/admin');
@@ -32,6 +37,8 @@ router.get('/admin-dashboard', async (req, res) => {
 });
 
 router.post('/create-user', adminController.createUser);
+
+router.post('/terminate-session', adminController.terminateUserSession);
 
 router.post('/admin-logout', (req,res)=>{
     req.session.destroy();
