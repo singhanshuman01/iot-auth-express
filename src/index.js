@@ -21,6 +21,8 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(cookieParser());
 
+app.get('/', (req,res)=>{ res.sendFile(join(__dirname,'..','views','lounge.html')); })
+
 app.use('/', authRoutes);
 app.use('/', userRoutes);
 app.use('/', adminRoutes);

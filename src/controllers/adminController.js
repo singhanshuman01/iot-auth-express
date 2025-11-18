@@ -19,6 +19,8 @@ async function handleLogin(req, res) {
 async function createUser(req, res) {
     const { username, password } = req.body;
     try {
+        const admin = req.session?.admin || null;
+        if(!admin) return res.redirect('/admin');
         const userExists = await userModel.getUser(username);
         if(userExists) return res.redirect('/admin-dashboard');
         const result = await adminModel.createUser(username, password);

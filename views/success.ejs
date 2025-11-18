@@ -5,29 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/userDashboard.css">
+    <link rel="shortcut icon" href="favicon/images.png" type="image/x-icon">
     <title>User Dashboard</title>
 </head>
 
 <body>
     <div class="box">
-        <form action="/start-charging" method="post" id="start-charging-form">
+        <% if (!isUsing) { %>
+         <form action="/start-charging" method="post" id="start-charging-form" class="charge-form">
 
-            <input type="radio" name="time" id="time-5">
+            <input type="radio" name="time" id="time-5" value="5" required>
             <label for="time-5">5min</label>
 
-            <input type="radio" name="time" id="time-10">
+            <input type="radio" name="time" id="time-10" value="10">
             <label for="time-10">10min</label>
 
-            <input type="radio" name="time" id="time-15">
+            <input type="radio" name="time" id="time-15" value="15">
             <label for="time-15">15min</label> <br>
 
             <label for="btn">Start Charging</label>
             <input type="submit" value="⚡">
         </form>
-        <form action="/stop-charging" method="post" id="stop-charging-form" hidden>
+        <% }else{ %>
+        
+        <form action="/stop-charging" method="post" id="stop-charging-form" class="charge-form">
             <label for="btn">Stop Charging</label>
             <input type="submit" value="o">
         </form>
+        <% } %>
     </div>
 
     <div class="logs">
@@ -53,8 +58,17 @@
         <button type="submit" class="logout-btn">Logout</button>
     </form>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-
+        const socket = io();
+        const chargeForm = document.querySelector('form.charge-form');
+        chargeForm.addEventListener('submit', (e)=>{
+            socket.emit('trigger-charge');
+        });
+        socket.on('charge-triggered', (newUrl)=>{
+            console.log(newUrl);
+            window.location = newUrl;
+        });
     </script>
 </body>
 
