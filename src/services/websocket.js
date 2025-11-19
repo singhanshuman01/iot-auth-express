@@ -3,6 +3,8 @@ import {createServer} from 'http';
 
 import app from "../index.js";
 import jwt from "../utils/jwt.js";
+import db from "../config/dbConfig.js";
+import { getRelayNumByUID } from "../utils/chargingSessionInfo.js";
 
 const server = createServer(app);
 const io = new Server(server);
@@ -11,10 +13,21 @@ const ratemap = {};
 
 io.use(async (socket,next)=>{
     try {
-        const {uid} = await jwt.decode(socket.handshake.headers.cookie?.split('token=')[1]?.split(';')[0]);
-        console.log(uid);
-        if(!uid) return next(new Error("Missing token"));
-        socket.uid = uid;
+        const cookie = socket.handshake.headers.cookie;
+        const cookies = cookie.split(';');
+        const token = cookies.filter(cookie=>cookie.trim().startsWith('token=', 0))[0]?.split('=')[1] || null;
+        const sessionId = cookies.filter(cookie=>cookie.trim().startsWith('connect.sid='))[0]?.split('=')[1] || null;
+        if(token){
+
+            const {uid} = await jwt.decode(token);
+            socket.uid = uid || null;
+            // console.log(socket.uid);
+        }else if(sessionId){
+
+            socket.sessionId = sessionId || null;
+            // console.log(socket.sessionId);
+        }
+        
         next();
     } catch (e) {
         console.error("Error in socket middleware: ", e);
@@ -25,6 +38,8 @@ io.use(async (socket,next)=>{
 io.on('connection', async (socket)=>{
     console.log(`A user connected with socket_id: ${socket.id}`);
     ratemap[socket.uid] = 0;
+    // console.log(socket.uid);
+    // console.log(socket.sessionId);
 
     if(socket.uid){
         const userRoom = `user_${socket.uid}`;
@@ -32,8 +47,17 @@ io.on('connection', async (socket)=>{
         console.log(`User_id ${socket.uid}, socket id: ${socket.id} has joined room ${userRoom}`);
     }
 
-    socket.on('trigger-charge', ()=>{
+    if(socket.sessionId){
+        const adminRoom = `admin`;
+        socket.join(adminRoom);
+        console.log(`An admin with socket_id: ${socket.id} has joined.`);
+    }
+    
+    socket.on('trigger-charge', async ()=>{
         io.to(`user_${socket.uid}`).emit('charge-triggered', '/success');
+        const user = await db.query('select username from users where id=$1',[socket.uid]);
+        const relNum = getRelayNumByUID(socket.uid);
+        io.to('admin').emit('relay-triggered', relNum, user.rows[0].username);
     });
 
     socket.on('disconnect', ()=>{

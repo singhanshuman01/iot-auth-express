@@ -13,17 +13,18 @@
     <div class="container">
         <div class="charging-status">
             <% for( let i=0; i < relayStatus.length; i++ ) { %>
-                <% if (relayStatus[i]) { %>
-                    <div>
+                <% if (relayStatus[i].uid) { %>
+                    <div id="relay-info-<%= i %>">
                         <p>Relay <%= i+1 %> is active</p>
-                    <form action="" method="post">
+                    <form action="/terminate-session" method="post">
+                        <input type="number" name="uid" value="<%= relayStatus[i].uid %>" hidden="">
+                        <input type="number" name="relaynum" value="<%= i %>" hidden>
                         <button type="submit" style="color: red;">x</button>
                     </form>
                     </div>
                     
                 <% }else{ %>
-                    <div>
-
+                    <div id="relay-info-<%= i %>">
                         <p>Relay <%= i+1 %> is inactive</p>
                     </div>
                     <% } %>
@@ -84,6 +85,11 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+        socket.on('relay-triggered', (relNum, user)=>{
+            console.log(relNum, user);
+            const target = document.querySelector(`div.charging-status`);
+            console.log(target);
+        });
     </script>
 </body>
 

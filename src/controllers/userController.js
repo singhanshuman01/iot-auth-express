@@ -1,14 +1,12 @@
 import axios from 'axios';
 import userModel from '../models/userModel.js';
-import { getSession, updateSession } from '../utils/chargingSessionInfo.js';
+import { updateSession,getRelayNumByUID } from '../utils/chargingSessionInfo.js';
 
 const nodemcuIP = process.argv[2];
 
-const sess = getSession();
-
 const displayUserDashboard = async function (req, res) {
     const user_id = req.id;
-    const b = sess.findIndex(relay=>relay.uid===user_id);
+    const b = getRelayNumByUID(user_id);
     // const espResponse = await axios.get(`http://${nodemcuIP}/status`, {
     //     headers: {'X-api-key': process.env.ESP_END_SECRET}
     // });
@@ -37,7 +35,6 @@ const startCharging = async function (req, res) {
 
 const stopCharging = async function (req, res) {
     try {
-        b = false;
         // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
         //     headers: {'X-api-key': process.env.ESP_END_SECRET}
         // });

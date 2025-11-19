@@ -31,6 +31,7 @@ function updateSession(relayNum, uid, state){
     try {
         session[relayNum].status = state;
         session[relayNum].uid = uid;
+        console.log('Update session was called. New session: ', session);
         return;
     } catch (e) {
         console.error("Error in updating esp sessions",e);
@@ -41,8 +42,16 @@ function getSession(){
     try {
         return session;
     } catch (e) {
-        
+        console.log(e);
     }
 }
 
-export {refreshSession, updateSession, getSession};
+function getRelayNumByUID(uid){
+    try {
+        return session.findIndex(relay=>relay.uid===uid);
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export {refreshSession, updateSession, getSession,getRelayNumByUID};

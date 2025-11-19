@@ -12,6 +12,9 @@ lerna-debug.log*
 # favicon
 public/favicon/
 
+#test subs
+testScript.ino
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

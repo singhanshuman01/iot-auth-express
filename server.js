@@ -5,6 +5,6 @@ import {refreshSession} from './src/utils/chargingSessionInfo.js'
 const port = process.env.PORT || 3000;
 
 server.listen(port, ()=>{
-    refreshSession();
+    // refreshSession();
     console.log(`Server listening, PORT: ${port}`);
 });
