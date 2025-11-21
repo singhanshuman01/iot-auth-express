@@ -25,18 +25,18 @@ async function startCharging(req, res) {
         updateSession(Number(relay), req.id, 'on');
         console.log(`Going to ${nodemcuIP}`);
 
-        let logs = userModel.updateUserLogs(req.id, time);
+        let logs = await userModel.updateUserLogs(req.id, time);
 
-        let esp = axios.get(`http://${nodemcuIP}/relay_on`, {
-            headers: { 'X-api-key': process.env.ESP_END_SECRET },
-            params: {
-                "relay": relay,
-                "uid": req.id
-            }
-        });
-        const [logsResponse, espResponse] = await Promise.all([logs, esp]);
-        espResponse = JSON.parse(espResponse);
-        console.log(espResponse);
+        // let esp = axios.get(`http://${nodemcuIP}/relay_on`, {
+        //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
+        //     params: {
+        //         "relay": relay,
+        //         "uid": req.id
+        //     }
+        // });
+        // const [logsResponse, espResponse] = await Promise.all([logs, esp]);
+        // espResponse = JSON.parse(espResponse);
+        // console.log(espResponse);
         
         userModel.stopChargingAfterStarted(time, req.id);
         res.redirect('/success');
@@ -48,13 +48,13 @@ async function startCharging(req, res) {
 async function stopCharging(req, res) {
     try {
         updateSession(getRelayNumByUID(req.id), null, 'off');
-        const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
-            headers: { 'X-api-key': process.env.ESP_END_SECRET },
-            params: {
-                "relay": getRelayNumByUID(req.id)
-            }
-        });
-        console.log(JSON.parse(espResponse));
+        // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
+        //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
+        //     params: {
+        //         "relay": getRelayNumByUID(req.id)
+        //     }
+        // });
+        // console.log(JSON.parse(espResponse));
         res.redirect('/success');
     } catch (err) {
         console.error("Error in stopping charging: ", err);

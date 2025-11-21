@@ -85,18 +85,24 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        socket.on('charging-started', (relNum) => {
+        socket.on('charging-started', (relNum,uid, time) => {
+            console.log(relNum, uid,time);
             const maindiv = document.querySelector(`div#relay-info-${relNum}`);
-            maindiv.innerHTML = `<p>Relay <%= i+1 %> is active</p>
+            maindiv.innerHTML = `<p>Relay ${relNum+1} is active</p>
                     <form action="/terminate-session" method="post">
-                        <input type="number" name="uid" value="<%= relayStatus[i].uid %>" hidden="">
-                        <input type="number" name="relaynum" value="<%= i %>" hidden>
+                        <input type="number" name="uid" value="${uid}" hidden="">
+                        <input type="number" name="relaynum" value="${relNum}" hidden>
                         <button type="submit" style="color: red;">x</button>
                     </form>`;
+            setTimeout(()=>{
+                const maindiv = document.querySelector(`div#relay-info-${relNum}`);
+                maindiv.innerHTML = `<p>Relay ${relNum+1} is inactive</p>`;
+            }, time*60*1000);
         });
         socket.on('charging-stopped', (relNum) => {
+            console.log(relNum);
             const maindiv = document.querySelector(`div#relay-info-${relNum}`);
-            maindiv.innerHTML = `<p>Relay <%= i+1 %> is inactive</p>`;
+            maindiv.innerHTML = `<p>Relay ${relNum} is inactive</p>`;
         });
     </script>
 </body>

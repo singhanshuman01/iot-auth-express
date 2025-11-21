@@ -13,9 +13,9 @@ const ratemap = {};
 io.use(async (socket,next)=>{
     try {
         const cookie = socket.handshake.headers.cookie;
-        const cookies = cookie.split(';');
-        const token = cookies.filter(cookie=>cookie.trim().startsWith('token=', 0))[0]?.split('=')[1] || null;
-        const sessionId = cookies.filter(cookie=>cookie.trim().startsWith('connect.sid='))[0]?.split('=')[1] || null;
+        const cookies = cookie?.split(';');
+        const token = cookies?.filter(cookie=>cookie.trim().startsWith('token=', 0))[0]?.split('=')[1] || null;
+        const sessionId = cookies?.filter(cookie=>cookie.trim().startsWith('connect.sid='))[0]?.split('=')[1] || null;
         if(token){
 
             const {uid} = await jwt.decode(token);
@@ -55,16 +55,17 @@ io.on('connection', async (socket)=>{
         console.log(`An admin with socket_id: ${socket.id} has joined.`);
     }
     
-    socket.on('start-charging', ()=>{
-        const relnum = getRelayNumByUID(socket.uid);
-        socket.relNum = relnum;
-        io.to(`user_${socket.uid}`).emit('charge-started');
-        io.to("admin").emit('charging-started', relnum );
+    socket.on('start-charging', (relay, time)=>{
+        socket.time = Number(time);
+        socket.relnum = (relay=="0")? 0 : (relay=="1")?1:-1;
+        io.to(`user_${socket.uid}`).emit('charge-started', socket.time);
+        io.to("admin").emit('charging-started', socket.relnum, socket.uid, socket.time );
     });
 
     socket.on('stop-charging', ()=>{
         io.to(`user_${socket.uid}`).emit('charge-stopped');
-        io.to("admin").emit('charging-stopped', socket.relNum);
+        io.to("admin").emit('charging-stopped', socket.relnum);
+        socket.time = 0;
         socket.relNum = -1;
     });
 

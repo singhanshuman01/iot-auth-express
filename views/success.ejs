@@ -71,11 +71,16 @@
         const form = document.querySelector("div.box form");
     
         form.addEventListener('submit', (e)=>{
-            if(form.id == "start-charging-form") socket.emit("start-charging");
+            // e.preventDefault();
+            if(form.id == "start-charging-form") {
+                const formdata = Object.fromEntries(new FormData(form));
+                console.log(formdata);
+                socket.emit("start-charging", formdata.relay,formdata.time);
+            }
             else if(form.id == "stop-charging-form") socket.emit("stop-charging");
         });
 
-        socket.on('charging-stopped', ()=>{
+        socket.on('charge-stopped', ()=>{
             box.innerHTML = `<form action="/start-charging" method="post" id="start-charging-form" class="charge-form">
 
             <input type="radio" name="time" id="time-5" value="5" required>
@@ -99,12 +104,17 @@
         </form>`;
         });
 
-        socket.on('charging-started', ()=>{
+        socket.on('charge-started', (time)=>{
             box.innerHTML = `<form action="/stop-charging" method="post" id="stop-charging-form" class="charge-form">
             <label for="btn">Stop Now</label>
             <input type="submit" value="o">
         </form>`;
+        
+        setTimeout(()=>{
+            socket.emit('stop-charging');
+        }, time);
         });
+
     </script>
 </body>
 

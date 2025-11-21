@@ -6,10 +6,12 @@ var session = [
     {
         status: 'off',
         uid: null,
+        time: 0
     },
     {
         status: 'off',
-        uid: null
+        uid: null,
+        time: 0
     }
 ];
 
@@ -27,10 +29,11 @@ async function refreshSession(){
     }
 }
 
-function updateSession(relayNum, uid, state){
+function updateSession(relayNum, uid, state, time=0){
     try {
         session[relayNum].status = state;
         session[relayNum].uid = uid;
+        session[relayNum].time = time;
         console.log('Update session was called. New session: ', session);
         return;
     } catch (e) {
@@ -39,11 +42,7 @@ function updateSession(relayNum, uid, state){
 }
 
 function getSession(){
-    try {
-        return session;
-    } catch (e) {
-        console.log(e);
-    }
+    return session;
 }
 
 function getStatus(){

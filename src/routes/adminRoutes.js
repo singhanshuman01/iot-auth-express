@@ -27,7 +27,7 @@ router.get('/admin-dashboard', async (req, res) => {
         const logs = await adminModel.getLogs();
         const sess = getSession();
         res.render('status', {
-            relayStatus: [sess[0], sess[1]],
+            relayStatus: sess,
             logs: logs
         });
     } catch (e) {

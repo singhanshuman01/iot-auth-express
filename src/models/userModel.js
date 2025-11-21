@@ -1,5 +1,6 @@
 import db from '../config/dbConfig.js';
 import bcrypt from 'bcrypt';
+import { getRelayNumByUID, updateSession } from '../utils/chargingSessionInfo.js';
 
 async function getUser(username) {
     try {
@@ -22,7 +23,7 @@ async function getUserLogs(uid){
 
 async function updateUserLogs(uid, timeperiod){
     try {
-        await db.query(`insert into logs(time_stamp, time_period, uid) values(${(new Date()).toLocaleTimeString}, $1, $2)`, [timeperiod, uid]);
+        await db.query(`insert into logs(time_stamp, time_period, uid) values(now(), $1, $2)`, [timeperiod, uid]);
         return true
     } catch (e) {
         console.error(e);
@@ -50,17 +51,18 @@ async function stopChargingAfterStarted(timeFor, uid) {
     try {
         setTimeout(async () => {
             const relayNum = getRelayNumByUID(uid);
+            updateSession(getRelayNumByUID(uid), null, 'off');
             if (relayNum) {
                 updateSession(relayNum, null, 'off');
-                const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
-                    headers: { 'X-api-key': process.env.ESP_END_SECRET },
-                    params: {
-                        "relay": relayNum
-                    }
-                });
-                console.log(JSON.parse(espResponse));
+                // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
+                //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
+                //     params: {
+                //         "relay": relayNum
+                //     }
+                // });
+                // console.log(JSON.parse(espResponse));
             }
-        }, timeFor * 60 * 1000)
+        }, 20 * 1000)
     } catch (e) {
         console.error(e);
     }
