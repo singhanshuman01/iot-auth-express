@@ -1,116 +1,164 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <ESP8266mDNS.h>
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET    -1
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-const int relayPin = D4;
-const char* ssid = "wifi_name";
-const char* password = "wifi_password";
-const char* flaskServerURL = "http://192.168.33.21:5000/register_ip";
+const int relayPin[2] = {D4, D5};
+const char *ssid = "wifi_name";
+const char *password = "wifi_password";
+int32_t channel = 6;
+const char *api_key = "567cc3bf97d674fb3a21c1b962e8a747c20c4cd3bb052e210e9e835d04ab15d9";
+// const char *expressServerURL;
 
 ESP8266WebServer server(80);
+const char *headerKeys[] = {"X-api-key"};
 
-String relayStatus = "Idle";
+typedef struct
+{
+    uint8_t stat;
+    uint8_t uid;
+} relayUsed;
 
-void updateDisplay() {
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setTextColor(WHITE);
-    display.setCursor(20, 25);
-    display.println(relayStatus);
-    display.display();
-}
+relayUsed r[2] = {{0, 0}, {0, 0}};
 
-void announceIP() {
-    if (WiFi.status() == WL_CONNECTED) {
-        WiFiClient client;
-        HTTPClient http;
-        String nodeMCU_IP = WiFi.localIP().toString();
-        http.begin(client, flaskServerURL);
-        http.addHeader("Content-Type", "application/json");
-
-        String requestBody = "{\"ip\": \"" + nodeMCU_IP + "\"}";
-        int httpResponseCode = http.POST(requestBody);
-
-        if (httpResponseCode > 0) {
-            Serial.print("IP announced successfully: ");
-            Serial.println(nodeMCU_IP);
-        } else {
-            Serial.print("Failed to announce IP: ");
-            Serial.println(httpResponseCode);
-        }
-        http.end();
+const char *sendPage = "<html><head><title>Unauthorized</title></head><body><h1>You ain't authorized to make this request nigga!!</h1></body></html>";
+bool auth()
+{
+    if (!server.hasHeader("X-api-key")){
+        server.send(401, "text/html", sendPage);
+        return false;
     }
+    if (server.header("X-api-key") != api_key){
+        server.send(403, "text/html", sendPage);
+        return false;
+    }
+    return true;
 }
 
-void setup() {
+void relayOn();
+void relayOff();
+void sendStatus(void);
+
+void setup()
+{
     Serial.begin(9600);
-    pinMode(relayPin, OUTPUT);
-    digitalWrite(relayPin, LOW);
-
-    // Initialize OLED display
-    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-        Serial.println(F("SSD1306 allocation failed"));
-        for (;;);
-    }
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(0, 0);
-    display.println("Starting...");
-    display.display();
-    delay(1000);
+    pinMode(relayPin[0], OUTPUT);
+    pinMode(relayPin[1], OUTPUT);
+    digitalWrite(relayPin[0], LOW);
+    digitalWrite(relayPin[1], LOW);
 
     // Connect to Wi-Fi
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid, password, channel);
     unsigned long startAttemptTime = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 20000) {  // 20-second timeout
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 20000)
+    { // 20-second timeout
         delay(500);
         Serial.print(".");
     }
-    if (WiFi.status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED)
+    {
         Serial.println("\nConnected to Wi-Fi!");
         Serial.print("ESP IP Address: ");
         Serial.println(WiFi.localIP());
-        announceIP();
-    } else {
-        Serial.println("\nFailed to connect to Wi-Fi!");
     }
-
-    // Initial Display Update
-    updateDisplay();
+    else
+    {
+        Serial.println("\nFailed to connect to Wi-Fi!");
+        return;
+    }
+    if (MDNS.begin("esp8266"))
+        Serial.println("MDNS responder started");
 
     // Define routes
-    server.on("/relay_on", []() {
-        digitalWrite(relayPin, HIGH);
-        relayStatus = "Charging";
-        updateDisplay();
-        server.send(200, "application/json", "{\"status\": \"Charging\"}");
-    });
-
-    server.on("/relay_off", []() {
-        digitalWrite(relayPin, LOW);
-        relayStatus = "Idle";
-        updateDisplay();
-        server.send(200, "application/json", "{\"status\": \"Idle\"}");
-    });
-
-    server.on("/status", []() {
-        String status = digitalRead(relayPin) == HIGH ? "Charging" : "Idle";
-        server.send(200, "application/json", "{\"status\": \"" + status + "\"}");
-    });
+    server.collectHeaders(headerKeys, 1);
+    server.on("/", home);
+    server.on("/relay_on", HTTP_POST, relayOn);
+    server.on("/relay_off", HTTP_POST, relayOff);
+    server.on("/status", HTTP_GET, sendStatus);
+    server.onNotFound(notfound);
 
     server.begin();
     Serial.println("Server started");
 }
 
-void loop() {
+void loop()
+{
     server.handleClient();
+    MDNS.update();
+}
+
+void home()
+{
+    char page[400];
+    sprintf(page, "<html>\
+        <head>\
+        <title>ESP HOME</title>\
+        </head>\
+        <body>\
+        <h1> Hey, If you see this page, yeah esp web server works</h1>\
+        </body>\
+        </html>\
+    ");
+    server.send(200, "text/html", page);
+}
+
+void relayOn()
+{
+    if (!auth())
+    {
+        return;
+    }
+    if (!server.hasArg("relay") || !server.hasArg("uid"))
+    {
+        server.send(400, "application/json", "{\"error\":\"missing parameters\"}");
+        return;
+    }
+    int relayNum = server.arg("relay").toInt();
+    int uid = server.arg("uid").toInt();
+    if (relayNum < 0 || relayNum > 1)
+    {
+
+        server.send(400, "application/json", "{\"error\":\"wrong relay pin\"}");
+        return;
+    }
+    digitalWrite(relayPin[relayNum], HIGH);
+    r[relayNum].stat = 1;
+    r[relayNum].uid = uid;
+    server.send(200, "application/json", "{\"status\": \"Charging\"}");
+}
+void relayOff()
+{
+    if(!auth()) return;
+    if(!server.hasArg("relay")){
+        server.send(400, "application/json", "{\"error\":\"missing relay param\"}");
+        return;
+    }
+    int relayNum = server.arg("relay").toInt();
+    if (relayNum == 0 || relayNum == 1)
+    {
+        digitalWrite(relayPin[relayNum], LOW);
+        r[relayNum].stat = 0;
+        r[relayNum].uid = NULL;
+        server.send(200, "application/json", "{\"status\": \"IDLE\"}");
+        return;
+    }
+    server.send(400, "application/json", "{\"error\":\"wrong relay pin\"}");
+}
+void sendStatus(void)
+{
+    if (!auth())return;
+    String json = "{\"relay0\":{\"state\":\"";
+    json += (r[0].stat == 1) ? "ACTIVE" : "IDLE";
+    json += "\",\"uid\":" + String(r[0].uid) + "},";
+    json += "\"relay1\":{\"state\":\"";
+    json += (r[1].stat == 1) ? "ACTIVE" : "IDLE";
+    json += "\",\"uid\":" + String(r[1].uid) + "}}";
+    
+    server.send(200, "application/json", json);
+}
+
+void notfound()
+{
+    String txt = "<html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Document</title></head><body><h1>No such route nigga</h1></body></html>";
+    server.send(404, "text/html", txt);
 }
