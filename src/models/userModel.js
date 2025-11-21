@@ -13,7 +13,7 @@ async function getUser(username) {
 
 async function getUserLogs(uid){
     try {
-        const result = await db.query('select time_stamp, time_period from users where uid=$1', [uid]);
+        const result = await db.query('select time_stamp, time_period from logs where uid=$1', [uid]);
         return result.rows;
     } catch (e) {
         console.error("Error retrieving user logs: ", e);

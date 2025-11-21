@@ -16,19 +16,19 @@
                 <% if (relayStatus[i].uid) { %>
                     <div id="relay-info-<%= i %>">
                         <p>Relay <%= i+1 %> is active</p>
-                    <form action="/terminate-session" method="post">
-                        <input type="number" name="uid" value="<%= relayStatus[i].uid %>" hidden="">
-                        <input type="number" name="relaynum" value="<%= i %>" hidden>
-                        <button type="submit" style="color: red;">x</button>
-                    </form>
+                        <form action="/terminate-session" method="post">
+                            <input type="number" name="uid" value="<%= relayStatus[i].uid %>" hidden="">
+                            <input type="number" name="relaynum" value="<%= i %>" hidden>
+                            <button type="submit" style="color: red;">x</button>
+                        </form>
                     </div>
-                    
-                <% }else{ %>
-                    <div id="relay-info-<%= i %>">
-                        <p>Relay <%= i+1 %> is inactive</p>
-                    </div>
-                    <% } %>
-            <% } %>
+
+                    <% }else{ %>
+                        <div id="relay-info-<%= i %>">
+                            <p>Relay <%= i+1 %> is inactive</p>
+                        </div>
+                        <% } %>
+                            <% } %>
         </div>
         <form action="/create-user" method="post">
             <label for="username">Username</label>
@@ -85,10 +85,18 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        socket.on('relay-triggered', (relNum, user)=>{
-            console.log(relNum, user);
-            const target = document.querySelector(`div.charging-status`);
-            console.log(target);
+        socket.on('charging-started', (relNum) => {
+            const maindiv = document.querySelector(`div#relay-info-${relNum}`);
+            maindiv.innerHTML = `<p>Relay <%= i+1 %> is active</p>
+                    <form action="/terminate-session" method="post">
+                        <input type="number" name="uid" value="<%= relayStatus[i].uid %>" hidden="">
+                        <input type="number" name="relaynum" value="<%= i %>" hidden>
+                        <button type="submit" style="color: red;">x</button>
+                    </form>`;
+        });
+        socket.on('charging-stopped', (relNum) => {
+            const maindiv = document.querySelector(`div#relay-info-${relNum}`);
+            maindiv.innerHTML = `<p>Relay <%= i+1 %> is inactive</p>`;
         });
     </script>
 </body>

@@ -3,7 +3,6 @@ import {createServer} from 'http';
 
 import app from "../index.js";
 import jwt from "../utils/jwt.js";
-import db from "../config/dbConfig.js";
 import { getRelayNumByUID } from "../utils/chargingSessionInfo.js";
 
 const server = createServer(app);
@@ -56,15 +55,18 @@ io.on('connection', async (socket)=>{
         console.log(`An admin with socket_id: ${socket.id} has joined.`);
     }
     
-    socket.on('trigger-charge', async ()=>{
-        io.to(`user_${socket.uid}`).emit('charge-triggered', '/success');
+    socket.on('start-charging', ()=>{
+        const relnum = getRelayNumByUID(socket.uid);
+        socket.relNum = relnum;
+        io.to(`user_${socket.uid}`).emit('charge-started');
+        io.to("admin").emit('charging-started', relnum );
     });
 
-    socket.on('inform-admin', async ()=>{
-        const user = await db.query('select username from users where id=$1',[socket.uid]);
-        const relNum = getRelayNumByUID(socket.uid);
-        io.to('admin').emit('relay-triggered', relNum, user.rows[0].username);
-    })
+    socket.on('stop-charging', ()=>{
+        io.to(`user_${socket.uid}`).emit('charge-stopped');
+        io.to("admin").emit('charging-stopped', socket.relNum);
+        socket.relNum = -1;
+    });
 
     socket.on('disconnect', ()=>{
         console.log(`Socket: ${socket.id} disconnected`);

@@ -46,6 +46,14 @@ function getSession(){
     }
 }
 
+function getStatus(){
+    try {
+        return [session[0].status, session[1].status];
+    } catch (e) {
+        
+    }
+}
+
 function getRelayNumByUID(uid){
     try {
         return session.findIndex(relay=>relay.uid===uid);
@@ -54,4 +62,4 @@ function getRelayNumByUID(uid){
     }
 }
 
-export {refreshSession, updateSession, getSession,getRelayNumByUID};
+export {refreshSession,getStatus, updateSession, getSession,getRelayNumByUID};

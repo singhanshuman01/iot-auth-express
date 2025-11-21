@@ -1,15 +1,17 @@
 import axios from 'axios';
 import userModel from '../models/userModel.js';
-import { updateSession, getRelayNumByUID } from '../utils/chargingSessionInfo.js';
+import { updateSession, getRelayNumByUID, getStatus } from '../utils/chargingSessionInfo.js';
 
 const nodemcuIP = process.argv[2];
 
 async function displayUserDashboard(req, res) {
     const user_id = req.id;
     const b = getRelayNumByUID(user_id);
+    const [r1,r2] = getStatus();
     const logs = await userModel.getUserLogs(req.id);
     res.render('success', {
         isUsing: b !== -1,
+        relays: [r1,r2],
         logs: logs
     });
 }
@@ -23,7 +25,7 @@ async function startCharging(req, res) {
         updateSession(Number(relay), req.id, 'on');
         console.log(`Going to ${nodemcuIP}`);
 
-        let logs = userModel.updateUserLogs(uid, time);
+        let logs = userModel.updateUserLogs(req.id, time);
 
         let esp = axios.get(`http://${nodemcuIP}/relay_on`, {
             headers: { 'X-api-key': process.env.ESP_END_SECRET },

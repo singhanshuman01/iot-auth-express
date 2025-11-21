@@ -23,10 +23,10 @@
             <input type="radio" name="time" id="time-15" value="15">
             <label for="time-15">15min</label> <br>
 
-            <input type="radio" name="relay" id="rel1" value="0" required>
+            <input type="radio" name="relay" id="rel1" value="0" required <% if(relays[0]=="on"){ %> disabled <% } %>>
             <label for="rel1">Relay 1</label>
 
-            <input type="radio" name="relay" id="rel2" value="1">
+            <input type="radio" name="relay" id="rel2" value="1" <% if(relays[1]=="on"){ %> disabled <% } %>>
             <label for="rel2">Relay 2</label>
 
             <label for="btn">Start Charging</label>
@@ -67,17 +67,43 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        const startForm = document.getElementById('start-charging-form');
-        const timer = document.getElementById('timer');
-        
-        const chargeForm = document.querySelector('form.charge-form');
-        chargeForm.addEventListener('submit', (e)=>{
-            socket.emit('trigger-charge');
+        const box = document.querySelector('div.box');
+        const form = document.querySelector("div.box form");
+    
+        form.addEventListener('submit', (e)=>{
+            if(form.id == "start-charging-form") socket.emit("start-charging");
+            else if(form.id == "stop-charging-form") socket.emit("stop-charging");
         });
-        socket.on('charge-triggered', (newUrl)=>{
-            console.log(newUrl);
-            socket.emit('inform-admin');
-            window.location = newUrl;
+
+        socket.on('charging-stopped', ()=>{
+            box.innerHTML = `<form action="/start-charging" method="post" id="start-charging-form" class="charge-form">
+
+            <input type="radio" name="time" id="time-5" value="5" required>
+            <label for="time-5">5min</label>
+
+            <input type="radio" name="time" id="time-10" value="10">
+            <label for="time-10">10min</label>
+
+            <input type="radio" name="time" id="time-15" value="15">
+            <label for="time-15">15min</label> <br>
+
+            <input type="radio" name="relay" id="rel1" value="0" required <% if(relays[0]=="on"){ %> disabled <% } %>>
+            <label for="rel1">Relay 1</label>
+
+            <input type="radio" name="relay" id="rel2" value="1" <% if(relays[1]=="on"){ %> disabled <% } %>>
+            <label for="rel2">Relay 2</label>
+
+            <label for="btn">Start Charging</label>
+            
+            <input type="submit" value="⚡">
+        </form>`;
+        });
+
+        socket.on('charging-started', ()=>{
+            box.innerHTML = `<form action="/stop-charging" method="post" id="stop-charging-form" class="charge-form">
+            <label for="btn">Stop Now</label>
+            <input type="submit" value="o">
+        </form>`;
         });
     </script>
 </body>
