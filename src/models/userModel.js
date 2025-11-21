@@ -36,4 +36,24 @@ async function verifyUser(username, password) {
     }
 }
 
-export default { getUser, getUserLogs, verifyUser };
+async function stopChargingAfterStarted(timeFor, uid) {
+    try {
+        setTimeout(async () => {
+            const relayNum = getRelayNumByUID(uid);
+            if (relayNum) {
+                updateSession(relayNum, null, 'off');
+                const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
+                    headers: { 'X-api-key': process.env.ESP_END_SECRET },
+                    params: {
+                        "relay": relayNum
+                    }
+                });
+                console.log(JSON.parse(espResponse));
+            }
+        }, timeFor * 60 * 1000)
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export default { getUser, getUserLogs, verifyUser,stopChargingAfterStarted };

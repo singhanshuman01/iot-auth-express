@@ -23,13 +23,19 @@
             <input type="radio" name="time" id="time-15" value="15">
             <label for="time-15">15min</label> <br>
 
+            <input type="radio" name="relay" id="rel1" value="0" required>
+            <label for="rel1">Relay 1</label>
+
+            <input type="radio" name="relay" id="rel2" value="1">
+            <label for="rel2">Relay 2</label>
+
             <label for="btn">Start Charging</label>
+            
             <input type="submit" value="⚡">
         </form>
         <% }else{ %>
-        
         <form action="/stop-charging" method="post" id="stop-charging-form" class="charge-form">
-            <label for="btn">Stop Charging</label>
+            <label for="btn">Stop Now</label>
             <input type="submit" value="o">
         </form>
         <% } %>
@@ -61,15 +67,21 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+        const startForm = document.getElementById('start-charging-form');
+        const timer = document.getElementById('timer');
+        
         const chargeForm = document.querySelector('form.charge-form');
         chargeForm.addEventListener('submit', (e)=>{
             socket.emit('trigger-charge');
         });
         socket.on('charge-triggered', (newUrl)=>{
             console.log(newUrl);
+            socket.emit('inform-admin');
             window.location = newUrl;
         });
     </script>
 </body>
 
 </html>
+
+

@@ -41,24 +41,30 @@ io.on('connection', async (socket)=>{
     // console.log(socket.uid);
     // console.log(socket.sessionId);
 
+    // const usersRoom = `users`;
     if(socket.uid){
         const userRoom = `user_${socket.uid}`;
         socket.join(userRoom);
+        // socket.join(users);
         console.log(`User_id ${socket.uid}, socket id: ${socket.id} has joined room ${userRoom}`);
     }
 
     if(socket.sessionId){
         const adminRoom = `admin`;
         socket.join(adminRoom);
+        // socket.join(users);
         console.log(`An admin with socket_id: ${socket.id} has joined.`);
     }
     
     socket.on('trigger-charge', async ()=>{
         io.to(`user_${socket.uid}`).emit('charge-triggered', '/success');
+    });
+
+    socket.on('inform-admin', async ()=>{
         const user = await db.query('select username from users where id=$1',[socket.uid]);
         const relNum = getRelayNumByUID(socket.uid);
         io.to('admin').emit('relay-triggered', relNum, user.rows[0].username);
-    });
+    })
 
     socket.on('disconnect', ()=>{
         console.log(`Socket: ${socket.id} disconnected`);

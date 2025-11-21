@@ -9,6 +9,8 @@ lerna-debug.log*
 # My keys
 *.key
 
+.vscode
+
 # favicon
 public/favicon/
 

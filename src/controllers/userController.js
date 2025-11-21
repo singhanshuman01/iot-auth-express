@@ -1,45 +1,55 @@
 import axios from 'axios';
 import userModel from '../models/userModel.js';
-import { updateSession,getRelayNumByUID } from '../utils/chargingSessionInfo.js';
+import { updateSession, getRelayNumByUID } from '../utils/chargingSessionInfo.js';
 
 const nodemcuIP = process.argv[2];
 
-const displayUserDashboard = async function (req, res) {
+async function displayUserDashboard(req, res) {
     const user_id = req.id;
     const b = getRelayNumByUID(user_id);
-    // const espResponse = await axios.get(`http://${nodemcuIP}/status`, {
-    //     headers: {'X-api-key': process.env.ESP_END_SECRET}
-    // });
     const logs = await userModel.getUserLogs(req.id);
-    // await Promise.all([logs, isUsing])
     res.render('success', {
-        isUsing: b!==-1,
+        isUsing: b !== -1,
         logs: logs
     });
 }
 
-const startCharging = async function (req, res) {
+async function startCharging(req, res) {
     try {
+        let { time, relay } = req.body;
+        time = Number(time);
+
+        console.log(time, relay);
+        updateSession(Number(relay), req.id, 'on');
         console.log(`Going to ${nodemcuIP}`);
+
+        let espResponse = await axios.get(`http://${nodemcuIP}/relay_on`, {
+            headers: { 'X-api-key': process.env.ESP_END_SECRET },
+            params: {
+                "relay": relay,
+                "uid": req.id
+            }
+        });
+        espResponse = JSON.parse(espResponse);
+        console.log(espResponse);
         
-        // const espResponse = await axios.get(`http://${nodemcuIP}/relay_on`, {
-        //     headers: {'X-api-key': process.env.ESP_END_SECRET}
-        // });
-        // console.log(espResponse);
-        updateSession(0, req.id, 'on');
+        userModel.stopChargingAfterStarted(time, req.id);
         res.redirect('/success');
     } catch (err) {
         console.error("Error in starting charging: ", err.message);
     }
 }
 
-const stopCharging = async function (req, res) {
+async function stopCharging(req, res) {
     try {
-        // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
-        //     headers: {'X-api-key': process.env.ESP_END_SECRET}
-        // });
-        // console.log(espResponse);
-        updateSession(0, null, 'off');
+        updateSession(getRelayNumByUID(req.id), null, 'off');
+        const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
+            headers: { 'X-api-key': process.env.ESP_END_SECRET },
+            params: {
+                "relay": getRelayNumByUID(req.id)
+            }
+        });
+        console.log(JSON.parse(espResponse));
         res.redirect('/success');
     } catch (err) {
         console.error("Error in stopping charging: ", err);
