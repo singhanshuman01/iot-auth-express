@@ -23,13 +23,16 @@ async function startCharging(req, res) {
         updateSession(Number(relay), req.id, 'on');
         console.log(`Going to ${nodemcuIP}`);
 
-        let espResponse = await axios.get(`http://${nodemcuIP}/relay_on`, {
+        let logs = userModel.updateUserLogs(uid, time);
+
+        let esp = axios.get(`http://${nodemcuIP}/relay_on`, {
             headers: { 'X-api-key': process.env.ESP_END_SECRET },
             params: {
                 "relay": relay,
                 "uid": req.id
             }
         });
+        const [logsResponse, espResponse] = await Promise.all([logs, esp]);
         espResponse = JSON.parse(espResponse);
         console.log(espResponse);
         
