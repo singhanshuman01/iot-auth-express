@@ -20,9 +20,10 @@ async function startCharging(req, res) {
     try {
         let { time, relay } = req.body;
         time = Number(time);
+        relay = (relay==='0')? 0: (relay==='1')?1:null;
 
         console.log(time, relay);
-        updateSession(Number(relay), req.id, 'on');
+        updateSession(Number(relay), req.id, 'on', time);
         console.log(`Going to ${nodemcuIP}`);
 
         let logs = await userModel.updateUserLogs(req.id, time);
@@ -47,7 +48,7 @@ async function startCharging(req, res) {
 
 async function stopCharging(req, res) {
     try {
-        updateSession(getRelayNumByUID(req.id), null, 'off');
+        
         // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
         //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
         //     params: {
@@ -55,6 +56,7 @@ async function stopCharging(req, res) {
         //     }
         // });
         // console.log(JSON.parse(espResponse));
+        updateSession(getRelayNumByUID(req.id), null, 'off');
         res.redirect('/success');
     } catch (err) {
         console.error("Error in stopping charging: ", err);

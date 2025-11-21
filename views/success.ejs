@@ -52,8 +52,8 @@
                 <% for( let i = 0; i < logs.length; i++ ) { %>
                 <tr>
                     <td><%= i+1 %></td>
-                    <td><%= logs[0].time_stamp %></td>
-                    <td><%= logs[0].time_period %> min</td>
+                    <td><%= logs[i].time_stamp %></td>
+                    <td><%= logs[i].time_period %> min</td>
                 </tr>
                 <% } %>
             </tbody>
@@ -68,9 +68,10 @@
     <script>
         const socket = io();
         const box = document.querySelector('div.box');
-        const form = document.querySelector("div.box form");
-    
-        form.addEventListener('submit', (e)=>{
+        
+        function fn(){
+            const form = document.querySelector("form.charge-form");
+            form.addEventListener('submit', (e)=>{
             // e.preventDefault();
             if(form.id == "start-charging-form") {
                 const formdata = Object.fromEntries(new FormData(form));
@@ -79,6 +80,8 @@
             }
             else if(form.id == "stop-charging-form") socket.emit("stop-charging");
         });
+        }
+        fn();
 
         socket.on('charge-stopped', ()=>{
             box.innerHTML = `<form action="/start-charging" method="post" id="start-charging-form" class="charge-form">
@@ -102,6 +105,7 @@
             
             <input type="submit" value="⚡">
         </form>`;
+        fn();
         });
 
         socket.on('charge-started', (time)=>{
@@ -109,10 +113,11 @@
             <label for="btn">Stop Now</label>
             <input type="submit" value="o">
         </form>`;
+        fn();
         
-        setTimeout(()=>{
-            socket.emit('stop-charging');
-        }, time);
+        // setTimeout(()=>{
+        //     socket.emit('stop-charging');
+        // }, time);
         });
 
     </script>

@@ -86,7 +86,7 @@
     <script>
         const socket = io();
         socket.on('charging-started', (relNum,uid, time) => {
-            console.log(relNum, uid,time);
+            console.log("Start charging triggered",relNum, uid,time);
             const maindiv = document.querySelector(`div#relay-info-${relNum}`);
             maindiv.innerHTML = `<p>Relay ${relNum+1} is active</p>
                     <form action="/terminate-session" method="post">
@@ -100,9 +100,9 @@
             }, time*60*1000);
         });
         socket.on('charging-stopped', (relNum) => {
-            console.log(relNum);
+            console.log("Stop charging triggered",relNum);
             const maindiv = document.querySelector(`div#relay-info-${relNum}`);
-            maindiv.innerHTML = `<p>Relay ${relNum} is inactive</p>`;
+            maindiv.innerHTML = `<p>Relay ${relNum+1} is inactive</p>`;
         });
     </script>
 </body>

@@ -63,10 +63,11 @@ io.on('connection', async (socket)=>{
     });
 
     socket.on('stop-charging', ()=>{
+        socket.relnum = getRelayNumByUID(socket.uid);
         io.to(`user_${socket.uid}`).emit('charge-stopped');
         io.to("admin").emit('charging-stopped', socket.relnum);
         socket.time = 0;
-        socket.relNum = -1;
+        socket.relnum = -1;
     });
 
     socket.on('disconnect', ()=>{

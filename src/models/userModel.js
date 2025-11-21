@@ -51,8 +51,8 @@ async function stopChargingAfterStarted(timeFor, uid) {
     try {
         setTimeout(async () => {
             const relayNum = getRelayNumByUID(uid);
-            updateSession(getRelayNumByUID(uid), null, 'off');
-            if (relayNum) {
+            // updateSession(getRelayNumByUID(uid), null, 'off');
+            if (relayNum==0 || relayNum==1) {
                 updateSession(relayNum, null, 'off');
                 // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
                 //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
@@ -62,7 +62,7 @@ async function stopChargingAfterStarted(timeFor, uid) {
                 // });
                 // console.log(JSON.parse(espResponse));
             }
-        }, 20 * 1000)
+        }, 20 * 1000);
     } catch (e) {
         console.error(e);
     }
