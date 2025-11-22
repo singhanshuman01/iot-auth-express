@@ -15,9 +15,9 @@ async function handleUserLogin(req,res){
                 sameSite: "strict",
                 expiresIn: '7d',
             });
-            res.redirect('/success');
+            res.redirect('/user/dashboard');
         }else{
-            res.render('login', {
+            res.render('user_login', {
                 message: "Wrong credentials"
             });
         }
@@ -32,9 +32,9 @@ async function handleAdminLogin(req, res) {
         const adminVerified = await adminModel.verifyAdmin(admin_name, admin_password);
         if (adminVerified) {
             req.session.admin = admin_name;
-            res.redirect('/admin-dashboard');
+            res.redirect('/admin/dashboard');
         } else {
-            res.redirect('/admin');
+            res.redirect('/auth/admin');
         }
     } catch (e) {
         console.error(e);

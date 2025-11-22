@@ -1,5 +1,5 @@
+import { relayOccupied, updateSession } from '../utils/chargingSessionInfo.js';
 import userModel from '../models/userModel.js';
-import { updateSession } from '../utils/chargingSessionInfo.js';
 import axios from 'axios';
 
 const nodemcuIP = process.argv[2];
@@ -7,7 +7,7 @@ const nodemcuIP = process.argv[2];
 async function createUser(req, res) {
     const { username, password } = req.body;
     try {
-        if(!req.session.admin) return res.redirect('/admin/login');
+        if(!req.session.admin) return res.redirect('/auth/admin');
         const userExists = await userModel.isUser(username);
         if(userExists) return res.redirect('/admin/dashboard');
         const result = await userModel.createUser(username, password);
@@ -21,13 +21,17 @@ async function createUser(req, res) {
 
 async function terminateUserSession(req,res){
     try {
-        if(!req.session || !req.session.admin) return res.redirect('/admin/login');
-        const {relaynum} = req.body;
+        if(!req.session || !req.session.admin) return res.redirect('/auth/admin');
+        const { uid, relaynum } = req.body;
+        if(!relayOccupied(uid)){
+            throw new Error(`No relay occupied by uid: ${uid}`);
+        }
         // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
         //     headers: {
         //         'X-api-key': process.env.ESP_END_SECRET
         //     }
         // });
+        userModel.cancelTimeout(uid);
         updateSession(relaynum, 0, 'off');
         // console.log(espResponse);
     } catch (e) {

@@ -4,21 +4,21 @@ import dbLogs from '../db/dbLogs.js';
 import { updateSession, relayOccupied} from '../utils/chargingSessionInfo.js';
 
 const nodemcuIP = process.argv[2];
-let timeoutId;
 
 async function displayUserDashboard(req, res) {
-    const user_id = req.id;
-    const b = relayOccupied(user_id);
-    const logs = await dbLogs.getLogs(user_id);
-    res.render('success', {
-        isUsing: b !== -1,
+    const userOccupiedRelay = relayOccupied(req.id);
+    const allRelayStatus = relayOccupied();
+    const logs = await dbLogs.getLogs(req.id);
+    res.render('user_dashboard', {
+        isUsing: userOccupiedRelay !== -1,
+        relays: allRelayStatus,
         logs: logs
     });
 }
 
 async function startCharging(req, res) {
     try {
-        if(relayOccupied(req.id)){
+        if(relayOccupied(req.id)!=-1){
             res.json({"error":"already busy"});
             return;
         }
@@ -47,8 +47,8 @@ async function startCharging(req, res) {
         // espResponse = JSON.parse(espResponse);
         // console.log(espResponse);
         
-        timeoutId = userModel.stopChargingAfterStarted(time, req.id);
-        res.redirect('/user/dashboard');
+        userModel.stopChargingTimeout(time, req.id);
+        res.redirect(`/user/dashboard?status=success&time=${time}`);
     } catch (err) {
         console.error("Error in starting charging: ", err.message);
     }
@@ -64,12 +64,21 @@ async function stopCharging(req, res) {
         //     }
         // });
         // console.log(JSON.parse(espResponse));
-        clearTimeout(timeoutId);
+        userModel.cancelTimeout(req.id);
         updateSession(relayOccupied(req.id), 0, 'off');
-        res.redirect('/user/dashboard');
+        res.redirect('/user/dashboard?status=stopped');
     } catch (err) {
         console.error("Error in stopping charging: ", err);
     }
 }
 
-export default { startCharging, stopCharging, displayUserDashboard };
+function userLogout(req,res){
+    try{
+        res.clearCookie("token");
+        res.redirect('/auth/user');
+    } catch (e){
+        console.error("Error loggin out user: ", e);
+    }
+}
+
+export default { userLogout, startCharging, stopCharging, displayUserDashboard };

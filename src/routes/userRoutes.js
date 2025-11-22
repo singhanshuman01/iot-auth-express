@@ -9,4 +9,6 @@ router.get('/user/dashboard', tokenCheck, userController.displayUserDashboard);
 router.post('/user/start-charging', tokenCheck, userController.startCharging);
 router.post('/user/stop-charging', tokenCheck, userController.stopCharging);
 
+router.post('/user/logout', tokenCheck, userController.userLogout);
+
 export default router;

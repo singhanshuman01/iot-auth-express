@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/userDashboard.css">
+    <link rel="shortcut icon" href="/favicon/images.png" type="image/x-icon">
+    <title>User Dashboard</title>
+</head>
+
+<body>
+    <div class="box">
+        <% if (!isUsing) { %>
+         <form action="/user/start-charging" method="post" id="start-charging-form" class="charge-form">
+
+            <input type="radio" name="time" id="time-5" value="5" required>
+            <label for="time-5">5min</label>
+
+            <input type="radio" name="time" id="time-10" value="10">
+            <label for="time-10">10min</label>
+
+            <input type="radio" name="time" id="time-15" value="15">
+            <label for="time-15">15min</label> <br>
+
+            <input type="radio" name="relay" id="rel1" value="0" required <% if(relays[0]=="on"){ %> disabled <% } %>>
+            <label for="rel1">Relay 1</label>
+
+            <input type="radio" name="relay" id="rel2" value="1" <% if(relays[1]=="on"){ %> disabled <% } %>>
+            <label for="rel2">Relay 2</label>
+
+            <label for="btn">Start Charging</label>
+            
+            <input type="submit" value="⚡">
+        </form>
+        <% }else{ %>
+        <form action="/user/stop-charging" method="post" id="stop-charging-form" class="charge-form">
+            <label for="btn">Stop Now</label>
+            <input type="submit" value="o">
+        </form>
+        <% } %>
+    </div>
+
+    <div class="logs">
+        <table>
+            <thead>
+                <th>Sr.no.</th>
+                <th>Date</th>
+                <th>Time Period</th>
+            </thead>
+            <tbody>
+                <% for( let i = 0; i < logs.length; i++ ) { %>
+                <tr>
+                    <td><%= i+1 %></td>
+                    <td><%= logs[i].time_stamp %></td>
+                    <td><%= logs[i].time_period %> min</td>
+                </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <form action="/user/logout" method="post">
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+
+    <script>
+        // const socket = io();
+        const params = new URLSearchParams(window.location.search);
+        const time = params.get("time");
+        if(time) setTimeout(()=>window.location.reload(), time*60*1000);
+    </script>
+</body>
+
+</html>
+
+

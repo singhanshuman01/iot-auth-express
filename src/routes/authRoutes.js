@@ -4,16 +4,11 @@ import authController from '../controllers/authController.js';
 const router = express.Router();
 
 router.get('/auth/user', (req,res)=>{
-    res.render('login');
+    res.render('user_login');
 }).post('/auth/user', authController.handleUserLogin);
 
 router.get('/auth/admin', (req,res)=>{
-    res.render('admin');
+    res.render('admin_login');
 }).post('/auth/admin', authController.handleAdminLogin);
-
-// router.post('/logout', (req,res)=>{
-//     res.clearCookie('token');
-//     res.redirect('/login');
-// });
 
 export default router;

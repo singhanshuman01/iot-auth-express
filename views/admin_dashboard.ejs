@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="/styles/style.css">
     <title>Admin Dashboard</title>
 </head>
 
@@ -82,9 +82,8 @@
         <button type="submit" class="logout-btn">Logout</button>
     </form>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        // const socket = io();
         socket.on('charging-started', (relNum,uid, time) => {
             console.log("Start charging triggered",relNum, uid,time);
             const maindiv = document.querySelector(`div#relay-info-${relNum}`);

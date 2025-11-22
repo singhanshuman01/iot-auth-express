@@ -13,13 +13,4 @@ async function verifyAdmin(admin_name, admin_password){
     }
 }
 
-async function getLogs() {
-    try {
-        const logs = await db.query("select * from logs");
-        return logs.rows;
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-export default {verifyAdmin, getLogs, createUser};
+export default {verifyAdmin};

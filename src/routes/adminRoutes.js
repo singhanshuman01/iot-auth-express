@@ -6,28 +6,15 @@ import authController from '../controllers/authController.js';
 import dbLogs from '../db/dbLogs.js';
 
 const router = express.Router();
-router.use('/admin' ,expressSession({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        path: '/admin',
-        sameSite: true,
-        maxAge: 1000*60*15,
-        httpOnly: true,
-    }
-}));
 
-router.get('/admin/login', (req, res) => {
-    res.render('admin_login');
-}).post('/admin/login', authController.handleAdminLogin);
+router.get('/admin', (req,res)=>res.redirect('/admin/dashboard'));
 
 router.get('/admin/dashboard', async (req, res) => {
     try {
-        if(!req.session.admin) return res.redirect('/admin/login');
+        if(!req.session.admin) return res.redirect('/auth/admin');
         const logs = await dbLogs.getLogs();
         const sess = relayOccupied();
-        res.render('status', {
+        res.render('admin_dashboard', {
             relayStatus: sess,
             logs: logs
         });

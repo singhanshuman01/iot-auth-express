@@ -1,6 +1,8 @@
 import db from '../config/dbConfig.js';
 import bcrypt from 'bcrypt';
 
+var timeoutId = {};
+
 async function createUser(username, password) {
     try {
         bcrypt.hash(password, 10, async (err, hash)=>{
@@ -42,9 +44,9 @@ async function verifyUser(username, password) {
     }
 }
 
-function stopChargingAfterStarted(timeFor, uid) {
+function stopChargingTimeout(timeFor, uid) {
     try {
-        const timeoutId = setTimeout(async () => {
+        timeoutId[uid] = setTimeout(async () => {
             const relayNum = relayOccupied(uid);
             if (relayNum==0 || relayNum==1) {
                 updateSession(relayNum, null, 'off');
@@ -56,11 +58,21 @@ function stopChargingAfterStarted(timeFor, uid) {
                 // });
                 // console.log(JSON.parse(espResponse));
             }
+            delete timeoutId[uid];
         }, timeFor*60 * 1000);
-        return timeoutId;
+        return timeoutId[uid];
     } catch (e) {
         console.error("Error in stopping charging: ",e);
     }
 }
 
-export default {createUser, isUser, verifyUser,stopChargingAfterStarted };
+function cancelTimeout(uid){
+    try {
+        cancelTimeout(timeoutId[uid]);
+        delete timeoutId[uid];
+    } catch (e) {
+        console.error("Error in canceling timeout: ", e);
+    }
+}
+
+export default {createUser, isUser, verifyUser, cancelTimeout, stopChargingTimeout };
