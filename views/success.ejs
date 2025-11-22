@@ -120,6 +120,19 @@
         // }, time);
         });
 
+        socket.on('rate-exceeded', ()=>{
+            box.innerHTML = `Too many attempts, retry after a minute`;
+            setTimeout(()=>window.location.reload(), 60*1000);
+        });
+
+        socket.on('block-relay', relnum=>{
+            console.log('block relay was emitted', relnum);
+            let i;
+            if(relnum==0) i = document.getElementById('rel1');
+            else i = document.getElementById('rel2');
+            i.setAttribute("disabled", 'true');
+        });
+
     </script>
 </body>
 

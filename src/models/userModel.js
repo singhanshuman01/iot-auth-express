@@ -1,33 +1,28 @@
 import db from '../config/dbConfig.js';
 import bcrypt from 'bcrypt';
-import { getRelayNumByUID, updateSession } from '../utils/chargingSessionInfo.js';
 
-async function getUser(username) {
+async function createUser(username, password) {
     try {
-        const result = await db.query("select id from users where username=$1", [username]);
-        if (result.rowCount > 0) return true;
-        return false;
+        bcrypt.hash(password, 10, async (err, hash)=>{
+            if(err) {console.error("Error in create user: ", err);
+                return;
+            }
+            await db.query("insert into users(username, password) values($1,$2)", [username, hash]);
+            console.log(`user created`);
+            return true;
+        });
     } catch (err) {
         console.error(err);
+        return false;
     }
 }
 
-async function getUserLogs(uid){
+async function isUser(username) {
     try {
-        const result = await db.query('select time_stamp, time_period from logs where uid=$1', [uid]);
-        return result.rows;
-    } catch (e) {
-        console.error("Error retrieving user logs: ", e);
-    }
-}
-
-async function updateUserLogs(uid, timeperiod){
-    try {
-        await db.query(`insert into logs(time_stamp, time_period, uid) values(now(), $1, $2)`, [timeperiod, uid]);
-        return true
-    } catch (e) {
-        console.error(e);
-        return null;
+        const result = await db.query("select id from users where username=$1", [username]);
+        return result.rowCount>0;
+    } catch (err) {
+        console.error(err);
     }
 }
 
@@ -47,11 +42,10 @@ async function verifyUser(username, password) {
     }
 }
 
-async function stopChargingAfterStarted(timeFor, uid) {
+function stopChargingAfterStarted(timeFor, uid) {
     try {
-        setTimeout(async () => {
-            const relayNum = getRelayNumByUID(uid);
-            // updateSession(getRelayNumByUID(uid), null, 'off');
+        const timeoutId = setTimeout(async () => {
+            const relayNum = relayOccupied(uid);
             if (relayNum==0 || relayNum==1) {
                 updateSession(relayNum, null, 'off');
                 // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
@@ -62,10 +56,11 @@ async function stopChargingAfterStarted(timeFor, uid) {
                 // });
                 // console.log(JSON.parse(espResponse));
             }
-        }, 20 * 1000);
+        }, timeFor*60 * 1000);
+        return timeoutId;
     } catch (e) {
-        console.error(e);
+        console.error("Error in stopping charging: ",e);
     }
 }
 
-export default { getUser, getUserLogs, verifyUser,stopChargingAfterStarted, updateUserLogs };
+export default {createUser, isUser, verifyUser,stopChargingAfterStarted };

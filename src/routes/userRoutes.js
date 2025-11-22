@@ -4,9 +4,9 @@ import tokenCheck from '../middlewares/verifyjwt.js';
 
 const router = express.Router();
 
-router.get('/success', tokenCheck, userController.displayUserDashboard);
+router.get('/user/dashboard', tokenCheck, userController.displayUserDashboard);
 
-router.post('/start-charging', tokenCheck, userController.startCharging);
-router.post('/stop-charging', tokenCheck, userController.stopCharging);
+router.post('/user/start-charging', tokenCheck, userController.startCharging);
+router.post('/user/stop-charging', tokenCheck, userController.stopCharging);
 
 export default router;

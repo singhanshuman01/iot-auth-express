@@ -1,32 +1,40 @@
 import axios from 'axios';
 import userModel from '../models/userModel.js';
-import { updateSession, getRelayNumByUID, getStatus } from '../utils/chargingSessionInfo.js';
+import dbLogs from '../db/dbLogs.js';
+import { updateSession, relayOccupied} from '../utils/chargingSessionInfo.js';
 
 const nodemcuIP = process.argv[2];
+let timeoutId;
 
 async function displayUserDashboard(req, res) {
     const user_id = req.id;
-    const b = getRelayNumByUID(user_id);
-    const [r1,r2] = getStatus();
-    const logs = await userModel.getUserLogs(req.id);
+    const b = relayOccupied(user_id);
+    const logs = await dbLogs.getLogs(user_id);
     res.render('success', {
         isUsing: b !== -1,
-        relays: [r1,r2],
         logs: logs
     });
 }
 
 async function startCharging(req, res) {
     try {
+        if(relayOccupied(req.id)){
+            res.json({"error":"already busy"});
+            return;
+        }
         let { time, relay } = req.body;
         time = Number(time);
         relay = (relay==='0')? 0: (relay==='1')?1:null;
 
-        console.log(time, relay);
-        updateSession(Number(relay), req.id, 'on', time);
+        const response = updateSession(relay, req.id, 'on', time);
+        if(response["error"]){
+            res.redirect('/user/dashboard');
+            return;
+        }
+
         console.log(`Going to ${nodemcuIP}`);
 
-        let logs = await userModel.updateUserLogs(req.id, time);
+        let logs = await dbLogs.createLog(req.id, time);
 
         // let esp = axios.get(`http://${nodemcuIP}/relay_on`, {
         //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
@@ -39,8 +47,8 @@ async function startCharging(req, res) {
         // espResponse = JSON.parse(espResponse);
         // console.log(espResponse);
         
-        userModel.stopChargingAfterStarted(time, req.id);
-        res.redirect('/success');
+        timeoutId = userModel.stopChargingAfterStarted(time, req.id);
+        res.redirect('/user/dashboard');
     } catch (err) {
         console.error("Error in starting charging: ", err.message);
     }
@@ -56,8 +64,9 @@ async function stopCharging(req, res) {
         //     }
         // });
         // console.log(JSON.parse(espResponse));
-        updateSession(getRelayNumByUID(req.id), null, 'off');
-        res.redirect('/success');
+        clearTimeout(timeoutId);
+        updateSession(relayOccupied(req.id), 0, 'off');
+        res.redirect('/user/dashboard');
     } catch (err) {
         console.error("Error in stopping charging: ", err);
     }

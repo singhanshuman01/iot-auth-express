@@ -10,6 +10,7 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 import rateLimiter from './middlewares/rateLimiter.js';
+
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

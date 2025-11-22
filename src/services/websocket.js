@@ -36,39 +36,49 @@ io.use(async (socket,next)=>{
 
 io.on('connection', async (socket)=>{
     console.log(`A user connected with socket_id: ${socket.id}`);
-    ratemap[socket.uid] = 0;
-    // console.log(socket.uid);
-    // console.log(socket.sessionId);
-
-    // const usersRoom = `users`;
+    ratemap[socket.uid] = 0; //log attempts to apply rate limit
+    
+    const allRoom = 'users';
     if(socket.uid){
         const userRoom = `user_${socket.uid}`;
         socket.join(userRoom);
-        // socket.join(users);
+        socket.join(allRoom);
         console.log(`User_id ${socket.uid}, socket id: ${socket.id} has joined room ${userRoom}`);
     }
 
     if(socket.sessionId){
         const adminRoom = `admin`;
         socket.join(adminRoom);
-        // socket.join(users);
         console.log(`An admin with socket_id: ${socket.id} has joined.`);
     }
     
     socket.on('start-charging', (relay, time)=>{
+        if(ratemap[socket.uid] > 6) {
+            socket.emit('rate-exceeded');
+            return;
+        }
+        ratemap[socket.uid]++;
         socket.time = Number(time);
         socket.relnum = (relay=="0")? 0 : (relay=="1")?1:-1;
         io.to(`user_${socket.uid}`).emit('charge-started', socket.time);
+        io.to('users').except(`user_${socket.uid}`).emit('block-relay', socket.relnum);
         io.to("admin").emit('charging-started', socket.relnum, socket.uid, socket.time );
     });
 
     socket.on('stop-charging', ()=>{
+        if(ratemap[socket.uid] > 6) {
+            socket.emit('rate-exceeded');
+            return;
+        }
+        ratemap[socket.uid]++;
         socket.relnum = getRelayNumByUID(socket.uid);
         io.to(`user_${socket.uid}`).emit('charge-stopped');
         io.to("admin").emit('charging-stopped', socket.relnum);
         socket.time = 0;
         socket.relnum = -1;
     });
+
+    setInterval(()=>ratemap[socket.uid]=0, 60*1000); //reset attempts every minute
 
     socket.on('disconnect', ()=>{
         console.log(`Socket: ${socket.id} disconnected`);

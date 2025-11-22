@@ -5,12 +5,12 @@ const nodemcuIP = process.argv[2];
 var session = [
     {
         status: 'off',
-        uid: null,
+        uid: 0,
         time: 0
     },
     {
         status: 'off',
-        uid: null,
+        uid: 0,
         time: 0
     }
 ];
@@ -31,34 +31,20 @@ async function refreshSession(){
 
 function updateSession(relayNum, uid, state, time=0){
     try {
+        if(session[relayNum]==='on') return {"error":"relay busy"};
         session[relayNum].status = state;
         session[relayNum].uid = uid;
         session[relayNum].time = time;
         console.log('Update session was called. New session: ', session);
-        return;
+        return {"status":"ok"};
     } catch (e) {
         console.error("Error in updating esp sessions",e);
     }
 }
 
-function getSession(){
-    return session;
+function relayOccupied(uid=0){
+    if(uid===0) return [session[0].status, session[1].status];
+    return session.findIndex(relay=>relay.uid===uid);
 }
 
-function getStatus(){
-    try {
-        return [session[0].status, session[1].status];
-    } catch (e) {
-        
-    }
-}
-
-function getRelayNumByUID(uid){
-    try {
-        return session.findIndex(relay=>relay.uid===uid);
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-export {refreshSession,getStatus, updateSession, getSession,getRelayNumByUID};
+export { refreshSession, updateSession, relayOccupied};

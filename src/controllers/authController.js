@@ -1,7 +1,8 @@
 import userModel from "../models/userModel.js";
+import adminModel from "../models/adminModel.js";
 import jwt from "../utils/jwt.js";
 
-async function handleLogin(req,res){
+async function handleUserLogin(req,res){
     const {username, password} = req.body;
     try {
         const checkUser = await userModel.verifyUser(username, password);
@@ -25,4 +26,19 @@ async function handleLogin(req,res){
     }
 }
 
-export default {handleLogin};
+async function handleAdminLogin(req, res) {
+    const { admin_name, admin_password } = req.body;
+    try {
+        const adminVerified = await adminModel.verifyAdmin(admin_name, admin_password);
+        if (adminVerified) {
+            req.session.admin = admin_name;
+            res.redirect('/admin-dashboard');
+        } else {
+            res.redirect('/admin');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export default { handleAdminLogin, handleUserLogin };

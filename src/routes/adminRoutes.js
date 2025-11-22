@@ -1,48 +1,49 @@
 import express from 'express';
 import expressSession from 'express-session';
 import adminController from '../controllers/adminController.js';
-import adminModel from '../models/adminModel.js';
-import { getSession } from '../utils/chargingSessionInfo.js';
+import {relayOccupied} from '../utils/chargingSessionInfo.js';
+import authController from '../controllers/authController.js';
+import dbLogs from '../db/dbLogs.js';
 
 const router = express.Router();
-router.use(expressSession({
+router.use('/admin' ,expressSession({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
+        path: '/admin',
         sameSite: true,
         maxAge: 1000*60*15,
         httpOnly: true,
     }
 }));
 
-router.get('/admin', (req, res) => {
-    res.render('admin');
-}).post('/admin', adminController.handleLogin);
+router.get('/admin/login', (req, res) => {
+    res.render('admin_login');
+}).post('/admin/login', authController.handleAdminLogin);
 
-router.get('/admin-dashboard', async (req, res) => {
+router.get('/admin/dashboard', async (req, res) => {
     try {
-        const admin = req.session?.admin || null;
-        if(!admin) return res.redirect('/admin');
-        const logs = await adminModel.getLogs();
-        const sess = getSession();
+        if(!req.session.admin) return res.redirect('/admin/login');
+        const logs = await dbLogs.getLogs();
+        const sess = relayOccupied();
         res.render('status', {
             relayStatus: sess,
             logs: logs
         });
     } catch (e) {
         console.error(e);
-        res.redirect('/admin');
+        res.redirect('/admin/login');
     }
 });
 
-router.post('/create-user', adminController.createUser);
+router.post('/admin/create-user', adminController.createUser);
 
-router.post('/terminate-session', adminController.terminateUserSession);
+router.post('/admin/terminate-session', adminController.terminateUserSession);
 
-router.post('/admin-logout', (req,res)=>{
+router.post('/admin/logout', (req,res)=>{
     req.session.destroy();
-    res.redirect('/admin');
+    res.redirect('/admin/login');
 })
 
 export default router;
