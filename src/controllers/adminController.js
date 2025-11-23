@@ -12,7 +12,7 @@ async function createUser(req, res) {
         if(userExists) return res.redirect('/admin/dashboard');
         const result = await userModel.createUser(username, password);
         if (!result) return res.status(500).send("Internal server error");
-        res.redirect('/admin/dashboard');
+        res.redirect('/admin/dashboard?user=created');
     } catch (e) {
         console.error(e);
         res.status(500).send("Internal server Error");

@@ -5,18 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/styles/create_user.css">
+    
     <title>Admin Dashboard</title>
 </head>
 
 <body>
     <h1>Dashboard</h1>
+    <% if(msg) {%>
+    <div id="temporary-banner" class="banner-hidden">
+        <div id="progress-bar"></div>
+        <p><%= msg %></p>
+    </div>
+    <% } %>
     <div class="container">
         <div class="charging-status">
             <% for( let i=0; i < relayStatus.length; i++ ) { %>
                 <% if (relayStatus[i].uid) { %>
                     <div id="relay-info-<%= i %>">
                         <p>Relay <%= i+1 %> is active</p>
-                        <form action="/terminate-session" method="post">
+                        <form action="/admin/terminate-session" method="post">
                             <input type="number" name="uid" value="<%= relayStatus[i].uid %>" hidden="">
                             <input type="number" name="relaynum" value="<%= i %>" hidden>
                             <button type="submit" style="color: red;">x</button>
@@ -30,7 +38,7 @@
                         <% } %>
                             <% } %>
         </div>
-        <form action="/create-user" method="post">
+        <form action="/admin/create-user" method="post">
             <label for="username">Username</label>
             <input type="text" name="username" id="username">
 
@@ -77,11 +85,33 @@
 
 
     </div>
-    <form action="/admin-logout" method="post">
+    <form action="/admin/logout" method="post">
 
         <button type="submit" class="logout-btn">Logout</button>
     </form>
 
+
+    <% if(locals.msg){ %>
+        <script>
+            document.addEventListener("DOMContentLoaded", (e)=>{
+                const banner = document.getElementById("temporary-banner");
+                const progressBar = document.getElementById("progress-bar");
+                const displayTime = 5000;
+                banner.classList.remove('banner-hidden');
+                banner.classList.add('banner-visible');
+                progressBar.classList.add("animate-progress-bar");        
+
+                setTimeout(()=>{
+                    banner.classList.remove("banner-visible");
+                    progressBar.classList.remove("animate-progress-bar");
+
+                    setTimeout(() => {
+                        banner.classList.add("banner-hidden")
+                    }, 500);
+                }, displayTime);
+            });
+        </script>
+    <% } %>
     <script>
         // const socket = io();
         socket.on('charging-started', (relNum,uid, time) => {

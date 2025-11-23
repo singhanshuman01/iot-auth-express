@@ -11,8 +11,8 @@ async function createUser(username, password) {
             }
             await db.query("insert into users(username, password) values($1,$2)", [username, hash]);
             console.log(`user created`);
-            return true;
         });
+        return true;
     } catch (err) {
         console.error(err);
         return false;
