@@ -17,11 +17,17 @@ var session = [
 
 async function refreshSession(){
     try {
-        const espResponse = await axios.get(`http://${nodemcuIP}/status`, {
+        let espResponse = await axios.get(`http://${nodemcuIP}/status`, {
             headers: {
                 'X-api-key': process.env.ESP_END_SECRET
             }
         });
+        espResponse = JSON.parse(espResponse);
+        session[0].status = (espResponse.relay0.state=="ACTIVE")? "on" : "off";
+        session[0].uid = (espResponse.relay0.state=="ACTIVE")? Number(espResponse.relay0.uid) : 0;
+        session[1].status = (espResponse.relay1.state=="ACTIVE")? "on" : "off";
+        session[1].uid = (espResponse.relay1.state=="ACTIVE")? Number(espResponse.relay1.uid) : 0;
+        
         console.log(espResponse);
         return;
     } catch (e) {

@@ -1,8 +1,8 @@
 import 'dotenv/config';
-import app from './src/index.js';
+import { server } from './src/services/websocket.js';
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, async ()=>{
+server.listen(port, async ()=>{
     console.log(`Server listening, PORT: ${port}`);
 });

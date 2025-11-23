@@ -49,13 +49,14 @@ function stopChargingTimeout(timeFor, uid) {
         timeoutId[uid] = setTimeout(async () => {
             const relayNum = relayOccupied(uid);
             if (relayNum==0 || relayNum==1) {
-                updateSession(relayNum, null, 'off');
+                
                 // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
                 //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
                 //     params: {
                 //         "relay": relayNum
                 //     }
                 // });
+                updateSession(relayNum, null, 'off');
                 // console.log(JSON.parse(espResponse));
             }
             delete timeoutId[uid];

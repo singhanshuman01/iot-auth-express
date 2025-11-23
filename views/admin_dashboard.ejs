@@ -6,34 +6,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="/styles/create_user.css">
-    
+
     <title>Admin Dashboard</title>
 </head>
 
 <body>
     <h1>Dashboard</h1>
-    <% if(msg) {%>
+
     <div id="temporary-banner" class="banner-hidden">
         <div id="progress-bar"></div>
-        <p><%= msg %></p>
+        <p>
+            <%= msg %>
+        </p>
     </div>
-    <% } %>
+
     <div class="container">
         <div class="charging-status">
             <% for( let i=0; i < relayStatus.length; i++ ) { %>
                 <% if (relayStatus[i].uid) { %>
                     <div id="relay-info-<%= i %>">
-                        <p>Relay <%= i+1 %> is active</p>
+                        <p>Port <%= i+1 %> is active</p>
                         <form action="/admin/terminate-session" method="post">
                             <input type="number" name="uid" value="<%= relayStatus[i].uid %>" hidden="">
-                            <input type="number" name="relaynum" value="<%= i %>" hidden>
+                            <input type="number" name="relaynum" value="<%= i %>" hidden="">
                             <button type="submit" style="color: red;">x</button>
                         </form>
                     </div>
 
                     <% }else{ %>
                         <div id="relay-info-<%= i %>">
-                            <p>Relay <%= i+1 %> is inactive</p>
+                            <p>Port <%= i+1 %> is inactive</p>
                         </div>
                         <% } %>
                             <% } %>
@@ -91,49 +93,48 @@
     </form>
 
 
-    <% if(locals.msg){ %>
-        <script>
-            document.addEventListener("DOMContentLoaded", (e)=>{
-                const banner = document.getElementById("temporary-banner");
-                const progressBar = document.getElementById("progress-bar");
-                const displayTime = 5000;
-                banner.classList.remove('banner-hidden');
-                banner.classList.add('banner-visible');
-                progressBar.classList.add("animate-progress-bar");        
-
-                setTimeout(()=>{
-                    banner.classList.remove("banner-visible");
-                    progressBar.classList.remove("animate-progress-bar");
-
-                    setTimeout(() => {
-                        banner.classList.add("banner-hidden")
-                    }, 500);
-                }, displayTime);
-            });
-        </script>
-    <% } %>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // const socket = io();
-        socket.on('charging-started', (relNum,uid, time) => {
-            console.log("Start charging triggered",relNum, uid,time);
-            const maindiv = document.querySelector(`div#relay-info-${relNum}`);
-            maindiv.innerHTML = `<p>Relay ${relNum+1} is active</p>
-                    <form action="/terminate-session" method="post">
-                        <input type="number" name="uid" value="${uid}" hidden="">
-                        <input type="number" name="relaynum" value="${relNum}" hidden>
-                        <button type="submit" style="color: red;">x</button>
-                    </form>`;
-            setTimeout(()=>{
-                const maindiv = document.querySelector(`div#relay-info-${relNum}`);
-                maindiv.innerHTML = `<p>Relay ${relNum+1} is inactive</p>`;
-            }, time*60*1000);
-        });
-        socket.on('charging-stopped', (relNum) => {
-            console.log("Stop charging triggered",relNum);
-            const maindiv = document.querySelector(`div#relay-info-${relNum}`);
-            maindiv.innerHTML = `<p>Relay ${relNum+1} is inactive</p>`;
-        });
+        const params = new URLSearchParams(window.location.search);
+        const isCreated = params?.get("user") || null;
+        if (isCreated === "created") {
+            document.addEventListener("DOMContentLoaded", bannerHolder);
+        }
+        function bannerHolder() {
+            const banner = document.getElementById("temporary-banner");
+            const progressBar = document.getElementById("progress-bar");
+            const displayTime = 5000;
+            banner.classList.remove('banner-hidden');
+            banner.classList.add('banner-visible');
+            progressBar.classList.add("animate-progress-bar");
+
+            setTimeout(() => {
+                banner.classList.remove("banner-visible");
+                progressBar.classList.remove("animate-progress-bar");
+
+                setTimeout(() => {
+                    banner.classList.add("banner-hidden")
+                }, 500);
+            }, displayTime);
+        }
     </script>
+    <script>
+        const socket = io();
+        const maindiv = document.getElementById(`relay-info-${relay}`);
+        socket.on('relay-busy', relay=>{
+            maindiv.innerHTML = `<p>Port ${relay+1} is active</p>
+                        <form action="/admin/terminate-session" method="post">
+                            <input type="number" name="uid" value="" hidden="">
+                            <input type="number" name="relaynum" value="${relay}" hidden>
+                            <button type="submit" style="color: red;">x</button>
+                        </form>`;
+        });
+
+        socket.on("relay-free", relay=>{
+            maindiv.innerHTML = `<p>Port ${relay+1} is inactive</p>`;
+        })
+    </script>
+
 </body>
 
 </html>

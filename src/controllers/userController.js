@@ -2,6 +2,7 @@ import axios from 'axios';
 import userModel from '../models/userModel.js';
 import dbLogs from '../db/dbLogs.js';
 import { updateSession, relayOccupied} from '../utils/chargingSessionInfo.js';
+import { io } from '../services/websocket.js';
 
 const nodemcuIP = process.argv[2];
 
@@ -26,6 +27,11 @@ async function startCharging(req, res) {
         time = Number(time);
         relay = (relay==='0')? 0: (relay==='1')?1:null;
 
+        const requestedRelayInfo = relayOccupied();
+        if(requestedRelayInfo[relay]=='on'){
+            res.redirect("/user/dashboard?error=busy");
+        }
+
         const response = updateSession(relay, req.id, 'on', time);
         if(response["error"]){
             res.redirect('/user/dashboard');
@@ -46,7 +52,7 @@ async function startCharging(req, res) {
         // const [logsResponse, espResponse] = await Promise.all([logs, esp]);
         // espResponse = JSON.parse(espResponse);
         // console.log(espResponse);
-        
+        io.except(`user_${req.id}`).emit('relay-busy', relay);
         userModel.stopChargingTimeout(time, req.id);
         res.redirect(`/user/dashboard?status=success&time=${time}`);
     } catch (err) {
@@ -56,7 +62,7 @@ async function startCharging(req, res) {
 
 async function stopCharging(req, res) {
     try {
-        
+        if(relayOccupied(req.id)==-1) return res.redirect('/user/dashboard');
         // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
         //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
         //     params: {
@@ -65,6 +71,7 @@ async function stopCharging(req, res) {
         // });
         // console.log(JSON.parse(espResponse));
         userModel.cancelTimeout(req.id);
+        io.except(`user_${req.id}`).emit('relay-free', relayOccupied(req.id));
         updateSession(relayOccupied(req.id), 0, 'off');
         res.redirect('/user/dashboard?status=stopped');
     } catch (err) {

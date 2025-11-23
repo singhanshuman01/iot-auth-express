@@ -12,33 +12,35 @@
 <body>
     <div class="box">
         <% if (!isUsing) { %>
-         <form action="/user/start-charging" method="post" id="start-charging-form" class="charge-form">
+            <form action="/user/start-charging" method="post" id="start-charging-form" class="charge-form">
 
-            <input type="radio" name="time" id="time-5" value="5" required>
-            <label for="time-5">5min</label>
+                <input type="radio" name="time" id="time-5" value="5" required>
+                <label for="time-5">5min</label>
 
-            <input type="radio" name="time" id="time-10" value="10">
-            <label for="time-10">10min</label>
+                <input type="radio" name="time" id="time-10" value="10">
+                <label for="time-10">10min</label>
 
-            <input type="radio" name="time" id="time-15" value="15">
-            <label for="time-15">15min</label> <br>
+                <input type="radio" name="time" id="time-15" value="15">
+                <label for="time-15">15min</label> <br>
 
-            <input type="radio" name="relay" id="rel1" value="0" required <% if(relays[0]=="on"){ %> disabled <% } %>>
-            <label for="rel1">Relay 1</label>
+                <input type="radio" name="relay" id="rel1" value="0" class="relay" required <% if(relays[0]=="on" ){ %>
+                disabled <% } %>>
+                    <label for="rel1">Port 1</label>
 
-            <input type="radio" name="relay" id="rel2" value="1" <% if(relays[1]=="on"){ %> disabled <% } %>>
-            <label for="rel2">Relay 2</label>
+                    <input type="radio" name="relay" id="rel2" value="1" class="relay" <% if(relays[1]=="on" ){ %>
+                    disabled <% } %>>
+                        <label for="rel2">Port 2</label><br>
 
-            <label for="btn">Start Charging</label>
-            
-            <input type="submit" value="⚡">
-        </form>
-        <% }else{ %>
-        <form action="/user/stop-charging" method="post" id="stop-charging-form" class="charge-form">
-            <label for="btn">Stop Now</label>
-            <input type="submit" value="o">
-        </form>
-        <% } %>
+                        <label for="btn">Start Charging</label>
+
+                        <input type="submit" value="⚡">
+            </form>
+            <% }else{ %>
+                <form action="/user/stop-charging" method="post" id="stop-charging-form" class="charge-form">
+                    <label for="btn">Stop Now</label>
+                    <input type="submit" value="o">
+                </form>
+                <% } %>
     </div>
 
     <div class="logs">
@@ -49,13 +51,19 @@
                 <th>Time Period</th>
             </thead>
             <tbody>
-                <% for( let i = 0; i < logs.length; i++ ) { %>
-                <tr>
-                    <td><%= i+1 %></td>
-                    <td><%= logs[i].time_stamp %></td>
-                    <td><%= logs[i].time_period %> min</td>
-                </tr>
-                <% } %>
+                <% for( let i=0; i < logs.length; i++ ) { %>
+                    <tr>
+                        <td>
+                            <%= i+1 %>
+                        </td>
+                        <td>
+                            <%= logs[i].time_stamp %>
+                        </td>
+                        <td>
+                            <%= logs[i].time_period %> min
+                        </td>
+                    </tr>
+                    <% } %>
             </tbody>
         </table>
     </div>
@@ -64,14 +72,44 @@
         <button type="submit" class="logout-btn">Logout</button>
     </form>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // const socket = io();
+        const socket = io();
+
+        // If user started charging
         const params = new URLSearchParams(window.location.search);
-        const time = params.get("time");
-        if(time) setTimeout(()=>window.location.reload(), time*60*1000);
+        const time = params.get("time"); //time will be a query parameter in redirection after user started relay
+        const isBusy = params?.get("error");
+        if (time) {
+            setTimeout(() => {
+                window.alert("Port session over");
+                window.location.reload();
+            }, time * 60 * 1000);
+        }
+        if(isBusy=="busy"){
+            window.alert("Relay already busy");
+        }
+
+        function alertMaker() {
+            window.alert("Relay busy");
+        }
+
+        socket.on('relay-busy', relay => {
+            console.log('relay is busy', relay);
+            if (relay<0 || relay>1) return;
+            const relays = document.querySelectorAll(".relay");
+            relays[relay].setAttribute("disabled", "true");
+            relays[relay].addEventListener('click', alertMaker);
+        });
+
+        socket.on("relay-free", relay => {
+            console.log('relay is free', relay);
+            if (relay<0 || relay>1) return;
+            const relays = document.querySelectorAll(".relay");
+            relays[relay].removeAttribute("disabled");
+            relays[relay].removeEventListener('click', alertMaker);
+        });
     </script>
 </body>
 
 </html>
-
-
