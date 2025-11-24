@@ -127,7 +127,7 @@
 
             if(!relayListener[relay]){
                 relayListener[relay] = alertMaker;
-                relays[relay].addEventListener('touchstart', alertMaker);
+                relays[relay].addEventListener('mouseover', alertMaker);
             }
         });
 
@@ -140,7 +140,7 @@
             relays[relay].removeAttribute("disabled");
 
             if(relayListener[relay]){
-                relays[relay].removeEventListener('touchstart', relayListener[relay]);
+                relays[relay].removeEventListener('mouseover', relayListener[relay]);
                 delete relayListener[relay];
             }
         });
@@ -153,6 +153,15 @@
                 </form>
                 `;
         });
+
+        socket.on("resetForm", ()=>{
+            window.location.href = '/user/dashboard';
+        })
+
+        socket.on("terminated", ()=>{
+            window.alert("Your port session was terminated by an admin");
+            window.location.reload();
+        })
 
     </script>
 </body>

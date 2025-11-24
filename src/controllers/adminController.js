@@ -1,5 +1,6 @@
 import { relayOccupied, updateSession } from '../utils/chargingSessionInfo.js';
 import userModel from '../models/userModel.js';
+import { io } from '../services/websocket.js';
 import axios from 'axios';
 
 const nodemcuIP = process.argv[2];
@@ -32,7 +33,10 @@ async function terminateUserSession(req,res){
         //     }
         // });
         userModel.cancelTimeout(uid);
+        io.to(`user_${uid}`).emit("terminated");
         updateSession(relaynum, 0, 'off');
+        io.except(`user_${uid}`).emit('relay-free', relayOccupied(uid));
+        res.redirect("/admin/dashboard");
         // console.log(espResponse);
     } catch (e) {
         console.error("Error in terminating user session: ", e);

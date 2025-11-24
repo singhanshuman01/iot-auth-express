@@ -23,7 +23,7 @@
     <div class="container">
         <div class="charging-status">
             <% for( let i=0; i < relayStatus.length; i++ ) { %>
-                <% if (relayStatus[i].uid) { %>
+                <% if (relayStatus[i]=="on") { %>
                     <div id="relay-info-<%= i %>">
                         <p>Port <%= i+1 %> is active</p>
                         <form action="/admin/terminate-session" method="post">
@@ -120,8 +120,8 @@
     </script>
     <script>
         const socket = io();
-        const maindiv = document.getElementById(`relay-info-${relay}`);
         socket.on('relay-busy', (relay, uid)=>{
+            const maindiv = document.getElementById(`relay-info-${relay}`);
             maindiv.innerHTML = `<p>Port ${relay+1} is active</p>
                         <form action="/admin/terminate-session" method="post">
                             <input type="number" name="uid" value="${uid}" hidden="">
@@ -131,6 +131,7 @@
         });
 
         socket.on("relay-free", relay=>{
+            const maindiv = document.getElementById(`relay-info-${relay}`);
             maindiv.innerHTML = `<p>Port ${relay+1} is inactive</p>`;
         })
     </script>
