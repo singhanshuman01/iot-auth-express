@@ -100,6 +100,7 @@ void home()
         </html>\
     ");
     server.send(200, "text/html", page);
+    return;
 }
 
 void relayOn()
@@ -125,6 +126,7 @@ void relayOn()
     r[relayNum].stat = 1;
     r[relayNum].uid = uid;
     server.send(200, "application/json", "{\"status\": \"Charging\"}");
+    return;
 }
 void relayOff()
 {
@@ -143,6 +145,7 @@ void relayOff()
         return;
     }
     server.send(400, "application/json", "{\"error\":\"wrong relay pin\"}");
+    return;
 }
 void sendStatus(void)
 {
@@ -155,10 +158,12 @@ void sendStatus(void)
     json += "\",\"uid\":" + String(r[1].uid) + "}}";
     
     server.send(200, "application/json", json);
+    return;
 }
 
 void notfound()
 {
     String txt = "<html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Document</title></head><body><h1>No such route nigga</h1></body></html>";
     server.send(404, "text/html", txt);
+    return;
 }

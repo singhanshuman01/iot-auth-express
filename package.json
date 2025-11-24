@@ -1,15 +1,16 @@
 {
   "name": "iot-access-express",
   "version": "1.0.0",
-  "description": "",
+  "description": "An express based website that interacts with iot device(esp8266) via HTTP to control electrical ports",
   "main": "server.js",
   "type": "module",
   "scripts": {
     "test": "node --watch server.js",
-    "start": "nodemon server.js"
+    "run": "nodemon server.js",
+    "start": "node server.js"
   },
-  "author": "anshuman",
-  "license": "ISC",
+  "author": "github.com/singhanshuman01",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",

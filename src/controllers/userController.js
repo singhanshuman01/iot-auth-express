@@ -1,14 +1,13 @@
-import axios from 'axios';
 import userModel from '../models/userModel.js';
 import dbLogs from '../db/dbLogs.js';
 import { updateSession, relayOccupied} from '../utils/chargingSessionInfo.js';
 import { io } from '../services/websocket.js';
+import espHandler from '../services/espHandler.js';
 
 const nodemcuIP = process.argv[2];
 
 async function displayUserDashboard(req, res) {
-    const userOccupiedRelay = relayOccupied(req.id);
-    const allRelayStatus = relayOccupied();
+    const [userOccupiedRelay, allRelayStatus]  = [relayOccupied(req.id), relayOccupied()];
     const logs = await dbLogs.getLogs(req.id);
     res.render('user_dashboard', {
         isUsing: userOccupiedRelay !== -1,
@@ -19,18 +18,21 @@ async function displayUserDashboard(req, res) {
 
 async function startCharging(req, res) {
     try {
-        if(relayOccupied(req.id)!=-1){
+        if(relayOccupied(req.id)!=-1){                              //check if relay is occupied by user
             res.json({"error":"already busy"});
             return;
         }
+
         let { time, relay } = req.body;
         time = Number(time);
-        relay = (relay==='0')? 0: (relay==='1')?1:null;
+        relay = (relay==='0')? 0: (relay==='1')?1:null;             //assign number values to relay
 
-        const requestedRelayInfo = relayOccupied();
-        if(requestedRelayInfo[relay]=='on'){
+        const requestedRelayInfo = relayOccupied(); 
+        if(requestedRelayInfo[relay]=='on'){                        //if relay is already occupied by someone else
             res.redirect("/user/dashboard?error=busy");
         }
+
+
 
         const response = updateSession(relay, req.id, 'on', time);
         if(response["error"]){
@@ -40,21 +42,14 @@ async function startCharging(req, res) {
 
         console.log(`Going to ${nodemcuIP}`);
 
-        let logs = await dbLogs.createLog(req.id, time);
+        let logs = dbLogs.createLog(req.id, time);
+        let esp = espHandler.turnRelayOn(relay, req.id);
 
-        // let esp = axios.get(`http://${nodemcuIP}/relay_on`, {
-        //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
-        //     params: {
-        //         "relay": relay,
-        //         "uid": req.id
-        //     }
-        // });
-        // const [logsResponse, espResponse] = await Promise.all([logs, esp]);
-        // espResponse = JSON.parse(espResponse);
-        // console.log(espResponse);
+        await Promise.all([logs, esp]);
+        
         io.except(`user_${req.id}`).emit('relay-busy', relay, req.id);
         io.to(`user_${req.id}`).emit('displayStopForm');
-        userModel.stopChargingTimeout(time, req.id);
+        userModel.stopChargingTimeout(time, req.id);                //set timeout to turn the relay off after 'time' minutes
         res.redirect(`/user/dashboard?status=success&time=${time}`);
     } catch (err) {
         console.error("Error in starting charging: ", err.message);
@@ -63,19 +58,14 @@ async function startCharging(req, res) {
 
 async function stopCharging(req, res) {
     try {
-        if(relayOccupied(req.id)==-1) return res.redirect('/user/dashboard');
-        // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
-        //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
-        //     params: {
-        //         "relay": getRelayNumByUID(req.id)
-        //     }
-        // });
-        // console.log(JSON.parse(espResponse));
+        const relay = relayOccupied(req.id);
+        if(relay==-1) return res.redirect('/user/dashboard');       //If no relay occupied by user
+        await espHandler.turnRelayOff(relay);
         
-        userModel.cancelTimeout(req.id);
-        io.except(`user_${req.id}`).emit('relay-free', relayOccupied(req.id));
+        userModel.cancelTimeout(req.id);                            //clear the timeout
+        io.except(`user_${req.id}`).emit('relay-free', relay);
         io.to(`user_${req.id}`).emit('resetForm');
-        updateSession(relayOccupied(req.id), 0, 'off');
+        updateSession(relay, 0, 'off');                             
         res.redirect('/user/dashboard?status=stopped');
     } catch (err) {
         console.error("Error in stopping charging: ", err);

@@ -28,7 +28,7 @@ const sessionMiddleware = expressSession({
 
 app.set('view engine', 'ejs');
 app.use(rateLimiter);
-app.use(morgan('dev'));
+app.use(morgan('combined'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('public'));
 app.use(express.json());
