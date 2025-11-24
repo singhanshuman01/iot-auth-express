@@ -1,6 +1,7 @@
 import db from '../config/dbConfig.js';
 import bcrypt from 'bcrypt';
 import { relayOccupied } from '../utils/chargingSessionInfo.js';
+import espHandler from '../services/espHandler.js';
 
 let tId ={};
 
@@ -42,22 +43,16 @@ async function verifyUser(username, password) {
     }
 }
 
-async function stopChargingTimeout(timeFor, uid) {
+function stopChargingTimeout(timeFor, uid) {
     try {
-        tId[uid] = setTimeout(() => {
+        tId[uid] = setTimeout(async () => {
             const relayNum = relayOccupied(uid);
             if (relayNum==0 || relayNum==1) {
                 
-                // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
-                //     headers: { 'X-api-key': process.env.ESP_END_SECRET },
-                //     params: {
-                //         "relay": relayNum
-                //     }
-                // });
+                await espHandler.turnRelayOff(relayNum);
                 updateSession(relayNum, null, 'off');
-                // console.log(JSON.parse(espResponse));
             }
-            // delete timeoutId[uid];
+            delete tId[uid];
         }, timeFor*60 * 1000);
     } catch (e) {
         console.error("Error in stopping charging: ",e);
@@ -67,6 +62,7 @@ async function stopChargingTimeout(timeFor, uid) {
 function cancelTimeout(uid){
     try {
         clearTimeout(tId[uid]);
+        delete tId[uid];
     } catch (e) {
         console.error("Error in canceling timeout: ", e);
     }

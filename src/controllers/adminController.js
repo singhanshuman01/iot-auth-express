@@ -1,9 +1,7 @@
 import { relayOccupied, updateSession } from '../utils/chargingSessionInfo.js';
 import userModel from '../models/userModel.js';
 import { io } from '../services/websocket.js';
-import axios from 'axios';
-
-const nodemcuIP = process.argv[2];
+import espHandler from '../services/espHandler.js';
 
 async function createUser(req, res) {
     const { username, password } = req.body;
@@ -27,17 +25,16 @@ async function terminateUserSession(req,res){
         if(!relayOccupied(uid)){
             throw new Error(`No relay occupied by uid: ${uid}`);
         }
-        // const espResponse = await axios.get(`http://${nodemcuIP}/relay_off`, {
-        //     headers: {
-        //         'X-api-key': process.env.ESP_END_SECRET
-        //     }
-        // });
+        
+        await espHandler.turnRelayOff(relayOccupied(uid));
+
         userModel.cancelTimeout(uid);
-        io.to(`user_${uid}`).emit("terminated");
         updateSession(relaynum, 0, 'off');
+
+        io.to(`user_${uid}`).emit("terminated");
         io.except(`user_${uid}`).emit('relay-free', relayOccupied(uid));
+        
         res.redirect("/admin/dashboard");
-        // console.log(espResponse);
     } catch (e) {
         console.error("Error in terminating user session: ", e);
     }

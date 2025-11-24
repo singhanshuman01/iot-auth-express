@@ -4,8 +4,6 @@ import { updateSession, relayOccupied} from '../utils/chargingSessionInfo.js';
 import { io } from '../services/websocket.js';
 import espHandler from '../services/espHandler.js';
 
-const nodemcuIP = process.argv[2];
-
 async function displayUserDashboard(req, res) {
     const [userOccupiedRelay, allRelayStatus]  = [relayOccupied(req.id), relayOccupied()];
     const logs = await dbLogs.getLogs(req.id);
@@ -40,8 +38,6 @@ async function startCharging(req, res) {
             return;
         }
 
-        console.log(`Going to ${nodemcuIP}`);
-
         let logs = dbLogs.createLog(req.id, time);
         let esp = espHandler.turnRelayOn(relay, req.id);
 
@@ -49,7 +45,9 @@ async function startCharging(req, res) {
         
         io.except(`user_${req.id}`).emit('relay-busy', relay, req.id);
         io.to(`user_${req.id}`).emit('displayStopForm');
+
         userModel.stopChargingTimeout(time, req.id);                //set timeout to turn the relay off after 'time' minutes
+
         res.redirect(`/user/dashboard?status=success&time=${time}`);
     } catch (err) {
         console.error("Error in starting charging: ", err.message);
@@ -63,9 +61,12 @@ async function stopCharging(req, res) {
         await espHandler.turnRelayOff(relay);
         
         userModel.cancelTimeout(req.id);                            //clear the timeout
+
+        updateSession(relay, 0, 'off');                     
+                
         io.except(`user_${req.id}`).emit('relay-free', relay);
         io.to(`user_${req.id}`).emit('resetForm');
-        updateSession(relay, 0, 'off');                             
+        
         res.redirect('/user/dashboard?status=stopped');
     } catch (err) {
         console.error("Error in stopping charging: ", err);

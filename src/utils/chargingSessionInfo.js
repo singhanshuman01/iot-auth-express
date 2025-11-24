@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const nodemcuIP = process.argv[2];
+import espHandler from "../services/espHandler";
 
 var session = [
     {
@@ -17,11 +15,7 @@ var session = [
 
 async function refreshSession(){
     try {
-        let espResponse = await axios.get(`http://${nodemcuIP}/status`, {
-            headers: {
-                'X-api-key': process.env.ESP_END_SECRET
-            }
-        });
+        let espResponse = await espHandler.getStatus();
         espResponse = JSON.parse(espResponse);
         session[0].status = (espResponse.relay0.state=="ACTIVE")? "on" : "off";
         session[0].uid = (espResponse.relay0.state=="ACTIVE")? Number(espResponse.relay0.uid) : 0;
