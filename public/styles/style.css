@@ -45,7 +45,7 @@ h1 {
   animation: fadeIn 0.6s ease-out;
 }
 
-.charging-status > div{
+.charging-status>div {
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -94,7 +94,7 @@ h1 {
   transform: translateY(0);
 }
 
-.container > form {
+.container>form {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 30px;
@@ -111,9 +111,26 @@ h1 {
   animation-fill-mode: both;
 }
 
-.container > form:hover {
+.container>form:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
 label {
@@ -141,7 +158,8 @@ input[type="password"]:focus {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-input[type="submit"] {
+input[type="submit"],
+input[type="reset"] {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
@@ -155,13 +173,35 @@ input[type="submit"] {
   margin-top: 10px;
 }
 
-input[type="submit"]:hover {
+input[type="submit"]:hover,
+input[type="reset"]:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
-input[type="submit"]:active {
+input[type="submit"]:active,
+input[type="reset"]:active {
   transform: translateY(0);
+}
+
+#customPrompt{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+#promptDialog{
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0,0,0, 0.2);
 }
 
 .logs {
@@ -255,6 +295,7 @@ tbody tr:last-child td {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -266,24 +307,25 @@ tbody tr:last-child td {
     font-size: 2rem;
     margin-bottom: 30px;
   }
-  
+
   .container {
     gap: 20px;
   }
-  
+
   .charging-status,
-  .container > form {
+  .container>form {
     min-width: 100%;
   }
-  
+
   .logout-btn {
     top: 10px;
     right: 10px;
     padding: 10px 20px;
     font-size: 14px;
   }
-  
-  th, td {
+
+  th,
+  td {
     padding: 10px;
     font-size: 13px;
   }
@@ -293,13 +335,13 @@ tbody tr:last-child td {
   body {
     padding: 20px 10px;
   }
-  
+
   .charging-status,
-  .container > form,
+  .container>form,
   .logs {
     padding: 20px;
   }
-  
+
   h1 {
     font-size: 1.5rem;
   }

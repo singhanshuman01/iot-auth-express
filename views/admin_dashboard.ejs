@@ -7,6 +7,42 @@
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="/styles/create_user.css">
 
+    <style>
+        /* .btn-delete,
+        .btn-create {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover,
+        .btn-create:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        } */
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+    </style>
+
     <title>Admin Dashboard</title>
 </head>
 
@@ -40,15 +76,43 @@
                         <% } %>
                             <% } %>
         </div>
-        <form action="/admin/create-user" method="post">
+        <form action="/admin/create-user" method="post" id="createUserForm">
             <label for="username">Username</label>
-            <input type="text" name="username" id="username">
+            <input type="text" name="username" id="username" required placeholder="Username">
 
             <label for="passwd">Password</label>
-            <input type="password" name="password" id="passwd">
+            <input type="password" name="password" id="passwd" required placeholder="Password">
 
-            <input type="submit" value="Create new user">
+            <div class="button-group">
+                <input type="submit" value="Create new user">
+                <input type="reset" value="Reset">
+            </div>
+
         </form>
+
+        <form id="deleteUserForm">
+            <label for="del-username">Username to Delete:</label>
+            <input type="text" id="del-username" name="username" required placeholder="Enter username">
+            
+            <label for="adminPassword">Admin Password:</label>
+            <input type="password" id="adminPassword" name="adminPassword" required placeholder="Enter your password">
+            <div class="error-message" id="errorMessage"></div>
+            
+
+            <div class="button-group">
+                <input type="submit" value="Delete User">
+                <input type="reset" value="Clear">
+            </div>
+            <div id="customPrompt" style="display: none;">
+                <div id="promptDialog">
+                    <p>Input password again:</p>
+                    <input type="password" id="promptPass"> <br>
+                    <button type="button" id="confirmBtn">Confirm</button>
+                    <button type="button" id="cancelBtn">Cancel</button>
+                </div>
+            </div>
+        </form>
+        
 
         <div class="logs">
             <table>
@@ -134,6 +198,92 @@
             const maindiv = document.getElementById(`relay-info-${relay}`);
             maindiv.innerHTML = `<p>Port ${relay+1} is inactive</p>`;
         })
+    </script>
+
+    <script>
+        const deleteUserForm = document.getElementById('deleteUserForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        deleteUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMessage.classList.remove('show');
+
+            const username = document.getElementById('del-username').value.trim();
+            const adminPassword = document.getElementById('adminPassword').value;
+
+            if (!username || !adminPassword) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            // First confirmation: Reconfirm password
+            const promptOverlay = document.getElementById("customPrompt");
+            promptOverlay.style.display = "flex";
+
+
+            let reconfirmPassword = null;
+            document.getElementById("confirmBtn").addEventListener("click", async ()=>{
+                reconfirmPassword = document.getElementById("promptPass").value;
+
+                if (reconfirmPassword === null) {
+                    // User clicked cancel
+                    console.log("reconfirm password is null");
+                    return;
+                }
+
+                if (reconfirmPassword !== adminPassword) {
+                    promptOverlay.style.display = "none";
+                    showError('Password does not match. Operation cancelled.');
+                    return;
+                }
+
+                console.log("reconfirm password equals password");
+
+                // Second confirmation: Warning prompt
+                const finalConfirm = confirm(`⚠️  WARNING ⚠️\n\nYou are about to permanently delete the user: "${username}"\n\nThis action CANNOT be undone.\n\nAre you sure you want to proceed?`);
+
+                if (!finalConfirm) {
+                    // User clicked cancel
+                    return;
+                }
+                document.getElementById("promptPass").value = "";
+                promptOverlay.style.display = "none";
+                // All confirmations passed, proceed with deletion
+                try {
+                    const response = await fetch('/admin/delete-user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            adminPassword: adminPassword
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert(`✓ User "${username}" has been successfully deleted.`);
+                        deleteUserForm.reset();
+                    } else {
+                        showError(data.message || 'Failed to delete user');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('An error occurred while trying to delete the user');
+                }
+            });
+            document.getElementById("cancelBtn").addEventListener("click", ()=>{
+                promptOverlay.style.display = "none";
+            });
+                                    
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
     </script>
 
 </body>

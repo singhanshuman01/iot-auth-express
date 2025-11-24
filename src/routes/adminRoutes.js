@@ -33,6 +33,8 @@ router.post('/admin/create-user', adminController.createUser);
 
 router.post('/admin/terminate-session', adminController.terminateUserSession);
 
+router.post("/admin/delete-user", adminController.deleteUser);
+
 router.post('/admin/logout', (req,res)=>{
     req.session.destroy();
     res.clearCookie("connect.sid");

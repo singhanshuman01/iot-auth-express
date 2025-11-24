@@ -2,6 +2,7 @@ import { relayOccupied, updateSession } from '../utils/chargingSessionInfo.js';
 import userModel from '../models/userModel.js';
 import { io } from '../services/websocket.js';
 import espHandler from '../services/espHandler.js';
+import adminModel from '../models/adminModel.js';
 
 async function createUser(req, res) {
     const { username, password } = req.body;
@@ -40,4 +41,24 @@ async function terminateUserSession(req,res){
     }
 }
 
-export default { createUser, terminateUserSession };
+async function deleteUser(req,res){
+    try {
+        if(!req.session || !req.session.admin) return res.redirect("/auth/admin");
+        const {username, adminPassword} = req.body;
+
+        const isVerified = await adminModel.verifyAdmin(req.session.admin, adminPassword);
+        if(!isVerified) return res.status(400).json({"status": "error", "msg":"Admin credentials wrong"});
+
+        const userExist = await userModel.isUser(username);
+        if(!userExist) return res.status(400).json({"status": "error", "msg":"User doesn't exist"});
+
+        const deleteStatus = await userModel.deleteUser(username);
+        return res.status(200).json({"status": "ok"});
+
+    } catch (e) {
+        console.error("Error in admin controller - delete User: ", e);
+        return res.status(500).json({"status":"error", "msg":"Internal server error"});
+    }
+}
+
+export default { createUser, deleteUser, terminateUserSession };

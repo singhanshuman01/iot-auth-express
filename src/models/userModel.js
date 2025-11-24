@@ -18,6 +18,16 @@ async function createUser(username, password) {
     }
 }
 
+async function deleteUser(username){
+    try {
+        await db.query("delete from users where username=$1", [username]);
+        return true;
+    } catch (e) {
+        console.error("Error deleting a user", e);
+        return false;
+    }
+}
+
 async function isUser(username) {
     try {
         const result = await db.query("select id from users where username=$1", [username]);
@@ -68,4 +78,4 @@ function cancelTimeout(uid){
     }
 }
 
-export default {createUser, isUser, verifyUser, cancelTimeout, stopChargingTimeout };
+export default {createUser, deleteUser, isUser, verifyUser, cancelTimeout, stopChargingTimeout };

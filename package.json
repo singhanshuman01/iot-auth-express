@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "test": "node --watch server.js",
-    "run": "nodemon server.js",
     "start": "node server.js"
   },
   "author": "github.com/singhanshuman01",
