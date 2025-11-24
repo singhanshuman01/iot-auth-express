@@ -23,24 +23,22 @@
                 <input type="radio" name="time" id="time-15" value="15">
                 <label for="time-15">15min</label> <br>
 
-                <input type="radio" name="relay" id="rel1" value="0" class="relay" required <% if(relays[0]=="on" ){ %>
-                disabled <% } %>>
-                    <label for="rel1">Port 1</label>
+                <input type="radio" name="relay" id="rel1" value="0" class="relay" required <% if(relays[0]=="on" ){ %>disabled <% } %>>
+                <label for="rel1">Port 1</label>
 
-                    <input type="radio" name="relay" id="rel2" value="1" class="relay" <% if(relays[1]=="on" ){ %>
-                    disabled <% } %>>
-                        <label for="rel2">Port 2</label><br>
+                <input type="radio" name="relay" id="rel2" value="1" class="relay" <% if(relays[1]=="on" ){ %>disabled <% } %>>
+                <label for="rel2">Port 2</label><br>
 
-                        <label for="btn">Start Charging</label>
+                <label for="btn">Start Charging</label>
 
-                        <input type="submit" value="⚡">
+                <input type="submit" value="⚡">
             </form>
             <% }else{ %>
                 <form action="/user/stop-charging" method="post" id="stop-charging-form" class="charge-form">
                     <label for="btn">Stop Now</label>
                     <input type="submit" value="o">
                 </form>
-                <% } %>
+            <% } %>
     </div>
 
     <div class="logs">
@@ -76,39 +74,86 @@
     <script>
         const socket = io();
 
-        // If user started charging
-        const params = new URLSearchParams(window.location.search);
-        const time = params.get("time"); //time will be a query parameter in redirection after user started relay
-        const isBusy = params?.get("error");
-        if (time) {
-            setTimeout(() => {
-                window.alert("Port session over");
-                window.location.reload();
-            }, time * 60 * 1000);
-        }
-        if(isBusy=="busy"){
-            window.alert("Relay already busy");
-        }
+        var tId;
+
+        const relayListener = {};
 
         function alertMaker() {
             window.alert("Relay busy");
         }
 
-        socket.on('relay-busy', relay => {
+
+        // If user started charging
+        const params = new URLSearchParams(window.location.search);
+        const status = params?.get("status");
+        if(status=="success"){
+            window.location.replace("/user/dashboard");
+            const time = params?.get("time"); //time will be a query parameter in redirection after user started relay
+
+            try {
+                
+                if (time) {
+                    tId = setTimeout(() => {
+                        window.alert("Port session over");
+                        window.location.reload();
+                    }, time * 60 * 1000);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        } else if(status=="stopped"){
+            try{
+                window.location.replace("/user/dashboard");
+                clearTimeout(tId);
+            }catch(e){
+                console.error(e);
+            }
+        }
+
+        const isBusy = params?.get("error");
+        if(isBusy=="busy"){
+            window.alert("Relay already busy");
+            window.location.replace("/user/dashboard");
+        }
+
+        
+
+        socket.on('relay-busy', (relay, uid) => {
             console.log('relay is busy', relay);
             if (relay<0 || relay>1) return;
+
             const relays = document.querySelectorAll(".relay");
             relays[relay].setAttribute("disabled", "true");
-            relays[relay].addEventListener('click', alertMaker);
+
+            if(!relayListener[relay]){
+                relayListener[relay] = alertMaker;
+                relays[relay].addEventListener('touchstart', alertMaker);
+            }
         });
 
         socket.on("relay-free", relay => {
             console.log('relay is free', relay);
             if (relay<0 || relay>1) return;
+
             const relays = document.querySelectorAll(".relay");
+
             relays[relay].removeAttribute("disabled");
-            relays[relay].removeEventListener('click', alertMaker);
+
+            if(relayListener[relay]){
+                relays[relay].removeEventListener('touchstart', relayListener[relay]);
+                delete relayListener[relay];
+            }
         });
+
+        socket.on('displayStopForm', ()=>{
+            document.querySelector('div.box').innerHTML = `
+                <form action="/user/stop-charging" method="post" id="stop-charging-form" class="charge-form">
+                    <label for="btn">Stop Now</label>
+                    <input type="submit" value="o">
+                </form>
+                `;
+        });
+
     </script>
 </body>
 

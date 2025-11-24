@@ -52,7 +52,8 @@ async function startCharging(req, res) {
         // const [logsResponse, espResponse] = await Promise.all([logs, esp]);
         // espResponse = JSON.parse(espResponse);
         // console.log(espResponse);
-        io.except(`user_${req.id}`).emit('relay-busy', relay);
+        io.except(`user_${req.id}`).emit('relay-busy', relay, req.id);
+        io.to(`user_${req.id}`).emit('displayStopForm');
         userModel.stopChargingTimeout(time, req.id);
         res.redirect(`/user/dashboard?status=success&time=${time}`);
     } catch (err) {
@@ -70,8 +71,10 @@ async function stopCharging(req, res) {
         //     }
         // });
         // console.log(JSON.parse(espResponse));
+        
         userModel.cancelTimeout(req.id);
         io.except(`user_${req.id}`).emit('relay-free', relayOccupied(req.id));
+        io.to(`user_${req.id}`).emit('resetForm');
         updateSession(relayOccupied(req.id), 0, 'off');
         res.redirect('/user/dashboard?status=stopped');
     } catch (err) {
