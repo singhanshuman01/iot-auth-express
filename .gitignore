@@ -14,6 +14,8 @@ lerna-debug.log*
 # favicon
 public/favicon/
 
+*.png
+
 #test subs
 testScript.ino
 
