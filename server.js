@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { server } from './src/services/websocket.js';
 import { genQR } from './src/utils/qrGenerator.js';
+import os from 'os';
 
 const port = process.env.PORT || 3000;
 
