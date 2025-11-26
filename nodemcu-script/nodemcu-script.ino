@@ -21,7 +21,7 @@ typedef struct
 
 relayUsed r[2] = {{0, 0}, {0, 0}};
 
-const char *sendPage = "<html><head><title>Unauthorized</title></head><body><h1>You ain't authorized to make this request nigga!!</h1></body></html>";
+const char *sendPage = "<html><head><title>Unauthorized</title></head><body><h1>You ain't authorized to make this request!!</h1></body></html>";
 bool auth()
 {
     if (!server.hasHeader("X-api-key")){

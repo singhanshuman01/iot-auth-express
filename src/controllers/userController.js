@@ -30,8 +30,6 @@ async function startCharging(req, res) {
             res.redirect("/user/dashboard?error=busy");
         }
 
-
-
         const response = updateSession(relay, req.id, 'on', time);
         if(response["error"]){
             res.redirect('/user/dashboard');
