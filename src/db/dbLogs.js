@@ -3,7 +3,7 @@ import db from '../config/dbConfig.js';
 async function getLogs(uid = 0){
     try {
         if(uid===0) {
-            const queryResult = await db.query("select * from logs");
+            const queryResult = await db.query("select l.*, u.username from logs l left join users u on l.uid=u.id");
             return queryResult.rows;
         }
         const queryResult = await db.query("select * from logs where uid=$1", [uid]);

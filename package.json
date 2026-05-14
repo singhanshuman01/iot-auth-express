@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "node --watch server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "author": "github.com/singhanshuman01",
   "license": "MIT",
